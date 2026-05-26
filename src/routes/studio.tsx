@@ -168,15 +168,15 @@ function FakeSite() {
       </div>
       <div className="grid gap-4 md:grid-cols-3">
         {[
-          { l: "Active patients", v: "1,284", d: "+8.2%", k: "success" },
-          { l: "Avg. wait time", v: "14m", d: "−3.4%", k: "success" },
-          { l: "Alerts open", v: "23", d: "+12", k: "destructive" },
+          { l: "Active patients", v: "1,284", d: "+8.2%", k: "text-success" },
+          { l: "Avg. wait time", v: "14m", d: "−3.4%", k: "text-success" },
+          { l: "Alerts open", v: "23", d: "+12", k: "text-destructive" },
         ].map((c) => (
           <div key={c.l} className="rounded-lg border border-border bg-surface-elevated p-4">
             <div className="text-xs text-muted-foreground">{c.l}</div>
             <div className="mt-1 flex items-baseline justify-between">
               <span className="text-2xl font-semibold text-ink">{c.v}</span>
-              <span className={`text-xs font-medium text-${c.k}`}>{c.d}</span>
+              <span className={`text-xs font-medium ${c.k}`}>{c.d}</span>
             </div>
           </div>
         ))}
