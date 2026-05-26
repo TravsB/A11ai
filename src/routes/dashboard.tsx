@@ -13,10 +13,10 @@ export const Route = createFileRoute("/dashboard")({
 });
 
 const ISSUES = [
-  { severity: "Critical", count: 3, color: "destructive", text: "Insufficient contrast on primary CTAs" },
-  { severity: "High", count: 8, color: "warning", text: "Color-only semantic indicators detected" },
-  { severity: "Medium", count: 14, color: "accent", text: "Focus ring contrast below 3:1" },
-  { severity: "Low", count: 22, color: "muted-foreground", text: "Decorative imagery missing alt text" },
+  { severity: "Critical", count: 3, dot: "bg-destructive", text: "Insufficient contrast on primary CTAs" },
+  { severity: "High", count: 8, dot: "bg-warning", text: "Color-only semantic indicators detected" },
+  { severity: "Medium", count: 14, dot: "bg-accent", text: "Focus ring contrast below 3:1" },
+  { severity: "Low", count: 22, dot: "bg-muted-foreground", text: "Decorative imagery missing alt text" },
 ];
 
 function DashboardPage() {
@@ -69,7 +69,7 @@ function DashboardPage() {
           <div className="mt-4 space-y-3">
             {ISSUES.map((i) => (
               <div key={i.severity} className="flex items-start gap-3 rounded-lg border border-border p-3">
-                <span className={`mt-1 h-2 w-2 shrink-0 rounded-full bg-${i.color}`} />
+                <span className={`mt-1 h-2 w-2 shrink-0 rounded-full ${i.dot}`} />
                 <div className="flex-1">
                   <div className="flex items-center justify-between">
                     <span className="text-sm font-medium text-ink">{i.severity}</span>
