@@ -1,0 +1,151 @@
+/* VisionAdapt — Formal enterprise theme override.
+   Loaded after the built popup stylesheet to retone the palette
+   from bright/playful to a muted, formal slate-navy identity. */
+
+:root {
+  --va-bg: #0b1220;
+  --va-bg-2: #0f1a2e;
+  --va-surface: #142036;
+  --va-surface-2: #1a2742;
+  --va-border: #243352;
+  --va-border-strong: #2f4368;
+  --va-text: #e2e8f0;
+  --va-text-muted: #93a3bd;
+  --va-text-dim: #6b7c98;
+  --va-accent: #3b6fa0;          /* muted steel blue */
+  --va-accent-strong: #4a82b8;
+  --va-accent-soft: #1e3a5f;
+  --va-success: #4f9a7a;
+  --va-warning: #b88a3e;
+  --va-danger:  #b85b5b;
+}
+
+html, body {
+  background: var(--va-bg) !important;
+  color: var(--va-text) !important;
+  font-family: "Inter", -apple-system, BlinkMacSystemFont, system-ui, sans-serif !important;
+  letter-spacing: -0.005em;
+}
+
+/* Cards & panels */
+.va-card,
+.bg-slate-900,
+.bg-slate-800 {
+  background-color: var(--va-surface) !important;
+  border-color: var(--va-border) !important;
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+  box-shadow: 0 1px 0 rgba(255,255,255,0.02) inset,
+              0 8px 24px -16px rgba(0,0,0,0.6) !important;
+}
+.bg-slate-700 { background-color: var(--va-surface-2) !important; }
+.bg-slate-600 { background-color: var(--va-border-strong) !important; }
+.bg-slate-500 { background-color: var(--va-border) !important; }
+
+/* Borders */
+.border-slate-700, .border-slate-600 { border-color: var(--va-border) !important; }
+
+/* Text */
+.text-slate-200 { color: var(--va-text) !important; }
+.text-slate-300 { color: #c7d2e3 !important; }
+.text-slate-400 { color: var(--va-text-muted) !important; }
+.text-slate-500, .text-slate-600 { color: var(--va-text-dim) !important; }
+
+/* Accent — replace bright blue & teals with formal steel blue */
+.bg-blue-500,
+.bg-teal-400, .bg-teal-600,
+.bg-emerald-400, .bg-emerald-500, .bg-green-500 {
+  background-color: var(--va-accent) !important;
+}
+.text-emerald-400 { color: var(--va-success) !important; }
+.border-emerald-400 { border-color: var(--va-success) !important; }
+
+/* Warnings — tone down */
+.bg-amber-400, .bg-amber-500, .bg-amber-600,
+.bg-yellow-300, .bg-yellow-400,
+.bg-orange-500 {
+  background-color: var(--va-warning) !important;
+}
+.text-amber-400 { color: var(--va-warning) !important; }
+.border-amber-500 { border-color: var(--va-warning) !important; }
+
+/* Danger */
+.bg-red-400, .bg-red-500 { background-color: var(--va-danger) !important; }
+.text-red-400 { color: var(--va-danger) !important; }
+.ring-red-400 { --tw-ring-color: var(--va-danger) !important; }
+
+/* Toggles */
+.va-toggle { background-color: var(--va-border) !important; }
+.va-toggle.bg-blue-500,
+.va-toggle[aria-checked="true"],
+.va-toggle[data-state="checked"] { background-color: var(--va-accent) !important; }
+.va-toggle-thumb { background-color: #f1f5f9 !important; box-shadow: 0 1px 2px rgba(0,0,0,0.4) !important; }
+
+/* Slider */
+.va-slider {
+  background: linear-gradient(to right,
+    var(--va-accent) var(--slider-pct, 50%),
+    var(--va-border) var(--slider-pct, 50%)) !important;
+  height: 4px !important;
+}
+.va-slider::-webkit-slider-thumb,
+.va-slider::-moz-range-thumb {
+  background-color: #f1f5f9 !important;
+  border: 2px solid var(--va-accent) !important;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.5) !important;
+}
+
+/* Mode buttons */
+.va-mode-btn {
+  background-color: var(--va-surface-2) !important;
+  border-color: var(--va-border) !important;
+  color: var(--va-text) !important;
+  border-radius: 6px !important;
+}
+.va-mode-btn:hover {
+  background-color: #213151 !important;
+  border-color: var(--va-border-strong) !important;
+}
+.va-mode-btn[aria-pressed="true"],
+.va-mode-btn.is-active,
+.va-mode-btn[data-active="true"] {
+  background-color: var(--va-accent-soft) !important;
+  border-color: var(--va-accent) !important;
+  box-shadow: inset 0 0 0 1px var(--va-accent) !important;
+}
+
+/* Labels — refine uppercase letter-spacing */
+.va-label {
+  color: var(--va-text-muted) !important;
+  letter-spacing: 0.14em !important;
+  font-size: 10px !important;
+  font-weight: 600 !important;
+}
+
+/* Buttons (generic) */
+button {
+  border-radius: 6px !important;
+  transition: background-color .15s ease, border-color .15s ease !important;
+}
+
+/* Headings — formal weight */
+h1, h2, h3 {
+  letter-spacing: -0.02em !important;
+  color: var(--va-text) !important;
+}
+
+/* Focus rings — muted */
+*:focus-visible {
+  outline: 2px solid var(--va-accent) !important;
+  outline-offset: 2px !important;
+  --tw-ring-color: var(--va-accent) !important;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: var(--va-bg); }
+::-webkit-scrollbar-thumb { background: var(--va-border-strong); border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: var(--va-accent); }
+
+/* Top bar / brand row tightening */
+body { width: 380px !important; min-height: 540px !important; }
