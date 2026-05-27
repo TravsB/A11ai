@@ -71,14 +71,20 @@ function Hero() {
           </p>
           <div className="mt-9 flex flex-wrap items-center justify-center gap-3">
             <Button size="lg" className="h-11 bg-ink px-5 text-background hover:bg-ink/90" asChild>
-              <Link to="/studio">
-                Open Live Studio <ArrowRight className="ml-1.5 h-4 w-4" />
-              </Link>
+              <a href="/visionadapt-extension.zip" download>
+                Download Browser Extension <ArrowRight className="ml-1.5 h-4 w-4" />
+              </a>
             </Button>
             <Button size="lg" variant="outline" className="h-11 px-5" asChild>
-              <Link to="/docs">View developer SDK</Link>
+              <Link to="/studio">Open Live Studio</Link>
+            </Button>
+            <Button size="lg" variant="ghost" className="h-11 px-5" asChild>
+              <Link to="/docs">Developer SDK</Link>
             </Button>
           </div>
+          <p className="mt-3 text-xs text-muted-foreground">
+            Chrome, Edge, Brave · Manifest V3 · v3.1.0 · Unpacked install
+          </p>
           <div className="mt-6 flex items-center justify-center gap-5 text-xs text-muted-foreground">
             <span className="inline-flex items-center gap-1.5"><Check className="h-3.5 w-3.5 text-success" /> WCAG 2.2 AA</span>
             <span className="inline-flex items-center gap-1.5"><Check className="h-3.5 w-3.5 text-success" /> SOC 2 Type II</span>
