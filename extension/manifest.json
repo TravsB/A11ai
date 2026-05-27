@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "VisionAdapt",
-  "version": "3.0.0",
-  "description": "Phase 3 — Intelligent adaptive accessibility ecosystem powered by the A11y intelligence engine. Real-time color, contrast, typography, and contextual adaptations for color blindness and visual accessibility.",
+  "name": "VisionAdapt Color Engine",
+  "version": "3.1.0",
+  "description": "Enterprise adaptive accessibility engine — real-time color blindness simulation, contrast correction, readable typography, and intelligent per-site adaptation.",
   "icons": {
     "16": "icons/icon16.png",
     "48": "icons/icon48.png",
@@ -15,7 +15,7 @@
       "48": "icons/icon48.png",
       "128": "icons/icon128.png"
     },
-    "default_title": "VisionAdapt — A11y Intelligence"
+    "default_title": "VisionAdapt — Accessibility Engine"
   },
   "background": {
     "service_worker": "background.js",
@@ -29,12 +29,6 @@
       "all_frames": false
     }
   ],
-  "permissions": [
-    "storage",
-    "activeTab",
-    "scripting"
-  ],
-  "host_permissions": [
-    "<all_urls>"
-  ]
+  "permissions": ["storage", "activeTab", "scripting"],
+  "host_permissions": ["<all_urls>"]
 }
