@@ -50,7 +50,7 @@ article, main, .content, [role="main"] {
 
 /* Add visible focus rings */
 .${l} :focus-visible {
-  outline: 3px solid #0d80e7 !important;
+  outline: 3px solid #3b6fa0 !important;
   outline-offset: 2px !important;
 }
 
@@ -84,7 +84,7 @@ article, main, .content, [role="main"] {
 
 /* Required fields — add indicator */
 .${l} [required] {
-  border-color: #0d80e7 !important;
+  border-color: #3b6fa0 !important;
 }
 
 /* Improve button affordance */
@@ -104,7 +104,7 @@ article, main, .content, [role="main"] {
 .${l} [class*="red"],
 .${l} [class*="danger"],
 .${l} [class*="error"] {
-  border-bottom: 2px solid #0d80e7 !important;
+  border-bottom: 2px solid #3b6fa0 !important;
 }
 .${l} [class*="green"],
 .${l} [class*="success"] {
