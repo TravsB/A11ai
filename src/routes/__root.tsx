@@ -65,13 +65,19 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         content:
           "Enterprise-grade adaptive color accessibility platform. Transform any website for protanopia, deuteranopia, tritanopia, and low-vision users in real time.",
       },
-      { property: "og:title", content: "VisionAdapt Color Engine" },
+      { property: "og:title", content: "VisionAdapt Color Engine — Adaptive Accessibility for the Web" },
       {
         property: "og:description",
         content: "Adaptive color accessibility infrastructure for the modern web.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
+      { name: "twitter:title", content: "VisionAdapt Color Engine — Adaptive Accessibility for the Web" },
+      { name: "description", content: "Reform Labs-A11y transforms websites for color blindness and visual readability." },
+      { property: "og:description", content: "Reform Labs-A11y transforms websites for color blindness and visual readability." },
+      { name: "twitter:description", content: "Reform Labs-A11y transforms websites for color blindness and visual readability." },
+      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/c0f19b00-65df-474c-800f-f89a665fc913/id-preview-3a42ab11--b91dec5d-5506-48ee-a8ff-79639da3bdb4.lovable.app-1779978892337.png" },
+      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/c0f19b00-65df-474c-800f-f89a665fc913/id-preview-3a42ab11--b91dec5d-5506-48ee-a8ff-79639da3bdb4.lovable.app-1779978892337.png" },
     ],
     links: [
       { rel: "stylesheet", href: appCss },
