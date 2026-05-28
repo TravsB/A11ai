@@ -36,7 +36,7 @@ function downloadExtension() {
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "VisionAdapt Color Engine — Adaptive Accessibility Platform" },
+      { title: "Reform Labs A11y — Adaptive Accessibility Platform" },
       {
         name: "description",
         content:
@@ -82,7 +82,7 @@ function Hero() {
             </span>
           </h1>
           <p className="mx-auto mt-6 max-w-2xl text-pretty text-lg text-muted-foreground">
-            VisionAdapt is an adaptive color engine that transforms any website in real
+            Reform Labs A11y is an adaptive color engine that transforms any website in real
             time for protanopia, deuteranopia, tritanopia, and low-vision users —
             without breaking layout, branding, or function.
           </p>
@@ -520,7 +520,7 @@ function Pricing() {
 
 const FAQS = [
   {
-    q: "Does VisionAdapt break my site's layout?",
+    q: "Does Reform Labs A11y break my site's layout?",
     a: "No. The engine performs scoped CSS overrides and runs a layout-integrity check after each injection. Branding tokens are preserved within accessibility bounds.",
   },
   {
