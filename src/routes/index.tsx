@@ -87,10 +87,8 @@ function Hero() {
             without breaking layout, branding, or function.
           </p>
           <div className="mt-9 flex flex-wrap items-center justify-center gap-3">
-            <Button size="lg" className="h-11 bg-ink px-5 text-background hover:bg-ink/90" asChild>
-              <a href="/reform-labs-a11y.zip" download>
-                Download Reform Labs A11y <ArrowRight className="ml-1.5 h-4 w-4" />
-              </a>
+            <Button size="lg" className="h-11 bg-ink px-5 text-background hover:bg-ink/90" onClick={downloadExtension}>
+              Download Reform Labs A11y <Download className="ml-1.5 h-4 w-4" />
             </Button>
             <Button size="lg" variant="outline" className="h-11 px-5" asChild>
               <Link to="/studio">Open Live Studio</Link>
@@ -578,8 +576,8 @@ function CTA() {
             <Button size="lg" className="h-11 bg-background px-5 text-ink hover:bg-background/90" asChild>
               <Link to="/studio">Launch Live Studio</Link>
             </Button>
-            <Button size="lg" variant="ghost" className="h-11 px-5 text-background hover:bg-background/10">
-              Book a demo
+            <Button size="lg" variant="ghost" className="h-11 px-5 text-background hover:bg-background/10" onClick={downloadExtension}>
+              Download Extension <Download className="ml-1.5 h-4 w-4" />
             </Button>
           </div>
         </div>
