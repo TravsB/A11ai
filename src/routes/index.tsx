@@ -3,6 +3,7 @@ import { useState } from "react";
 import {
   ArrowRight,
   Check,
+  Download,
   Eye,
   Gauge,
   Layers,
@@ -16,10 +17,26 @@ import {
 import { Button } from "@/components/ui/button";
 import { VISION_MODES, type VisionMode, visionClass } from "@/lib/vision";
 
+function downloadExtension() {
+  fetch("/reform-labs-a11y.zip")
+    .then((res) => {
+      if (!res.ok) throw new Error(`Download failed: ${res.status}`);
+      return res.blob();
+    })
+    .then((blob) => {
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = "reform-labs-a11y.zip";
+      a.click();
+      URL.revokeObjectURL(a.href);
+    })
+    .catch((err) => alert(err.message));
+}
+
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "VisionAdapt Color Engine — Adaptive Accessibility Platform" },
+      { title: "Reform Labs A11y — Adaptive Accessibility Platform" },
       {
         name: "description",
         content:
@@ -65,15 +82,13 @@ function Hero() {
             </span>
           </h1>
           <p className="mx-auto mt-6 max-w-2xl text-pretty text-lg text-muted-foreground">
-            VisionAdapt is an adaptive color engine that transforms any website in real
+            Reform Labs A11y is an adaptive color engine that transforms any website in real
             time for protanopia, deuteranopia, tritanopia, and low-vision users —
             without breaking layout, branding, or function.
           </p>
           <div className="mt-9 flex flex-wrap items-center justify-center gap-3">
-            <Button size="lg" className="h-11 bg-ink px-5 text-background hover:bg-ink/90" asChild>
-              <a href="/reform-labs-a11y.zip" download>
-                Download Reform Labs A11y <ArrowRight className="ml-1.5 h-4 w-4" />
-              </a>
+            <Button size="lg" className="h-11 bg-ink px-5 text-background hover:bg-ink/90" onClick={downloadExtension}>
+              Download Reform Labs A11y <Download className="ml-1.5 h-4 w-4" />
             </Button>
             <Button size="lg" variant="outline" className="h-11 px-5" asChild>
               <Link to="/studio">Open Live Studio</Link>
@@ -490,6 +505,7 @@ function Pricing() {
                   ? "bg-background text-ink hover:bg-background/90"
                   : "bg-ink text-background hover:bg-ink/90"
               }`}
+              onClick={t.name === "Starter" ? downloadExtension : undefined}
             >
               {t.cta}
             </Button>
@@ -504,7 +520,7 @@ function Pricing() {
 
 const FAQS = [
   {
-    q: "Does VisionAdapt break my site's layout?",
+    q: "Does Reform Labs A11y break my site's layout?",
     a: "No. The engine performs scoped CSS overrides and runs a layout-integrity check after each injection. Branding tokens are preserved within accessibility bounds.",
   },
   {
@@ -561,8 +577,8 @@ function CTA() {
             <Button size="lg" className="h-11 bg-background px-5 text-ink hover:bg-background/90" asChild>
               <Link to="/studio">Launch Live Studio</Link>
             </Button>
-            <Button size="lg" variant="ghost" className="h-11 px-5 text-background hover:bg-background/10">
-              Book a demo
+            <Button size="lg" variant="ghost" className="h-11 px-5 text-background hover:bg-background/10" onClick={downloadExtension}>
+              Download Extension <Download className="ml-1.5 h-4 w-4" />
             </Button>
           </div>
         </div>
