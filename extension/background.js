@@ -1,54 +1,83 @@
-const a = {
-  enabled: !1,
-  mode: "none",
-  contrastBoost: 50,
-  fontSize: 100,
-  lineHeight: 100,
-  readableFont: !1,
-  highReadability: !1,
-  // Phase 3 defaults
-  a11yMode: "none",
-  heatmapEnabled: !1,
-  adaptiveLearning: !0,
-  showRecommendations: !0
-}, o = "visionadapt_settings";
-async function c() {
-  return new Promise((e) => {
+// Reform Labs — A11y · Service Worker
+const DEFAULTS = {
+  enabled: false,
+  mode: "none",                 // none | protanopia | deuteranopia | tritanopia | achromatopsia | low-contrast
+  contrastBoost: 50,            // 0..100  (50 = neutral)
+  fontSize: 100,                // %
+  lineHeight: 100,              // %
+  readableFont: false,
+  highReadability: false,
+  daltonize: false,
+  linkEmphasis: true,
+  // Reading Focus Ruler (new flagship feature)
+  rulerEnabled: false,
+  rulerHeight: 110,             // px band height
+  rulerDim: 70,                 // 0..100 dim strength outside band
+  // Adaptive
+  adaptiveLearning: true,
+  showRecommendations: true,
+};
+const KEY = "reformlabs_a11y_settings";
+
+async function loadSettings() {
+  return new Promise((resolve) => {
     try {
-      chrome.storage.sync.get(o, (n) => {
-        if (chrome.runtime.lastError) {
-          e({ ...a });
-          return;
-        }
-        const t = n[o];
-        e(t && typeof t == "object" ? { ...a, ...t } : { ...a });
+      chrome.storage.sync.get(KEY, (r) => {
+        if (chrome.runtime.lastError) return resolve({ ...DEFAULTS });
+        const v = r[KEY];
+        resolve(v && typeof v === "object" ? { ...DEFAULTS, ...v } : { ...DEFAULTS });
       });
     } catch {
-      e({ ...a });
+      resolve({ ...DEFAULTS });
     }
   });
 }
-async function i(e, n) {
-  try {
-    await chrome.tabs.sendMessage(e, { type: "APPLY_SETTINGS", settings: n });
-  } catch {
-  }
+
+async function saveSettings(patch) {
+  const cur = await loadSettings();
+  const next = { ...cur, ...patch };
+  return new Promise((resolve) => {
+    chrome.storage.sync.set({ [KEY]: next }, () => resolve(next));
+  });
 }
+
+async function pushTo(tabId, settings) {
+  try { await chrome.tabs.sendMessage(tabId, { type: "APPLY_SETTINGS", settings }); } catch {}
+}
+
+async function pushToActive(settings) {
+  const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+  if (tab?.id != null) await pushTo(tab.id, settings);
+}
+
 chrome.runtime.onInstalled.addListener(async (e) => {
-  e.reason === "install" && console.log("[VisionAdapt] Phase 3 — Installed"), e.reason === "update" && console.log("[VisionAdapt] Phase 3 — Updated");
+  console.log("[Reform Labs A11y] " + e.reason);
 });
-chrome.tabs.onUpdated.addListener(async (e, n) => {
-  if (n.status === "complete")
-    try {
-      const t = await c();
-      t.enabled && await i(e, t);
-    } catch {
+
+chrome.tabs.onUpdated.addListener(async (tabId, info) => {
+  if (info.status !== "complete") return;
+  const s = await loadSettings();
+  if (s.enabled || s.rulerEnabled) await pushTo(tabId, s);
+});
+
+chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
+  (async () => {
+    if (msg.type === "RELAY_TO_ACTIVE_TAB") {
+      await pushToActive(msg.settings);
+      sendResponse({ ok: true });
     }
+  })();
+  return true;
 });
-chrome.runtime.onMessage.addListener((e, n, t) => {
-  if (e.type === "RELAY_TO_ACTIVE_TAB")
-    return chrome.tabs.query({ active: !0, currentWindow: !0 }, async (r) => {
-      const s = r[0];
-      s?.id && await i(s.id, e.settings), t({ ok: !0 });
-    }), !0;
+
+// Keyboard shortcuts
+chrome.commands?.onCommand.addListener(async (command) => {
+  const s = await loadSettings();
+  if (command === "toggle-engine") {
+    const next = await saveSettings({ enabled: !s.enabled });
+    await pushToActive(next);
+  } else if (command === "toggle-ruler") {
+    const next = await saveSettings({ rulerEnabled: !s.rulerEnabled });
+    await pushToActive(next);
+  }
 });
