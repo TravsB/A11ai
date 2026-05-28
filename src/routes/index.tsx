@@ -3,6 +3,7 @@ import { useState } from "react";
 import {
   ArrowRight,
   Check,
+  Download,
   Eye,
   Gauge,
   Layers,
@@ -15,6 +16,22 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { VISION_MODES, type VisionMode, visionClass } from "@/lib/vision";
+
+function downloadExtension() {
+  fetch("/reform-labs-a11y.zip")
+    .then((res) => {
+      if (!res.ok) throw new Error(`Download failed: ${res.status}`);
+      return res.blob();
+    })
+    .then((blob) => {
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = "reform-labs-a11y.zip";
+      a.click();
+      URL.revokeObjectURL(a.href);
+    })
+    .catch((err) => alert(err.message));
+}
 
 export const Route = createFileRoute("/")({
   head: () => ({
