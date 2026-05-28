@@ -505,6 +505,7 @@ function Pricing() {
                   ? "bg-background text-ink hover:bg-background/90"
                   : "bg-ink text-background hover:bg-ink/90"
               }`}
+              onClick={t.name === "Starter" ? downloadExtension : undefined}
             >
               {t.cta}
             </Button>
