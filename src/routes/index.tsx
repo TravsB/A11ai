@@ -71,8 +71,8 @@ function Hero() {
           </p>
           <div className="mt-9 flex flex-wrap items-center justify-center gap-3">
             <Button size="lg" className="h-11 bg-ink px-5 text-background hover:bg-ink/90" asChild>
-              <a href="/visionadapt-extension.zip" download>
-                Download Browser Extension <ArrowRight className="ml-1.5 h-4 w-4" />
+              <a href="/reform-labs-a11y.zip" download>
+                Download Reform Labs A11y <ArrowRight className="ml-1.5 h-4 w-4" />
               </a>
             </Button>
             <Button size="lg" variant="outline" className="h-11 px-5" asChild>
@@ -83,7 +83,7 @@ function Hero() {
             </Button>
           </div>
           <p className="mt-3 text-xs text-muted-foreground">
-            Chrome, Edge, Brave · Manifest V3 · v3.1.0 · Unpacked install
+            Chrome, Edge, Brave · Manifest V3 · v4.0.0 · Reading Focus Ruler included
           </p>
           <div className="mt-6 flex items-center justify-center gap-5 text-xs text-muted-foreground">
             <span className="inline-flex items-center gap-1.5"><Check className="h-3.5 w-3.5 text-success" /> WCAG 2.2 AA</span>
