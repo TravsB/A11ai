@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import {
   ArrowRight,
@@ -8,6 +8,7 @@ import {
   Gauge,
   Layers,
   LineChart,
+  Lock,
   Palette,
   ShieldCheck,
   Sparkles,
@@ -16,21 +17,30 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { VISION_MODES, type VisionMode, visionClass } from "@/lib/vision";
+import { useAuth } from "@/lib/auth-context";
 
-function downloadExtension() {
-  fetch("/reform-labs-a11y.zip")
-    .then((res) => {
-      if (!res.ok) throw new Error(`Download failed: ${res.status}`);
-      return res.blob();
-    })
-    .then((blob) => {
-      const a = document.createElement("a");
-      a.href = URL.createObjectURL(blob);
-      a.download = "reform-labs-a11y.zip";
-      a.click();
-      URL.revokeObjectURL(a.href);
-    })
-    .catch((err) => alert(err.message));
+function useDownloadExtension() {
+  const { user } = useAuth();
+  const navigate = useNavigate();
+  return () => {
+    if (!user) {
+      navigate({ to: "/login", search: { mode: "signin", redirect: "/" } });
+      return;
+    }
+    fetch("/reform-labs-a11y.zip")
+      .then((res) => {
+        if (!res.ok) throw new Error(`Download failed: ${res.status}`);
+        return res.blob();
+      })
+      .then((blob) => {
+        const a = document.createElement("a");
+        a.href = URL.createObjectURL(blob);
+        a.download = "reform-labs-a11y.zip";
+        a.click();
+        URL.revokeObjectURL(a.href);
+      })
+      .catch((err) => alert(err.message));
+  };
 }
 
 export const Route = createFileRoute("/")({
@@ -66,6 +76,8 @@ function LandingPage() {
 /* ------------------------- Hero ------------------------- */
 
 function Hero() {
+  const { user } = useAuth();
+  const download = useDownloadExtension();
   return (
     <section className="relative overflow-hidden">
       <div className="absolute inset-0 grid-bg" aria-hidden />
@@ -87,8 +99,12 @@ function Hero() {
             without breaking layout, branding, or function.
           </p>
           <div className="mt-9 flex flex-wrap items-center justify-center gap-3">
-            <Button size="lg" className="h-11 bg-ink px-5 text-background hover:bg-ink/90" onClick={downloadExtension}>
-              Download Reform Labs A11y <Download className="ml-1.5 h-4 w-4" />
+            <Button size="lg" className="h-11 bg-ink px-5 text-background hover:bg-ink/90" onClick={download}>
+              {user ? (
+                <>Download Reform Labs A11y <Download className="ml-1.5 h-4 w-4" /></>
+              ) : (
+                <>Sign in to download <Lock className="ml-1.5 h-4 w-4" /></>
+              )}
             </Button>
             <Button size="lg" variant="outline" className="h-11 px-5" asChild>
               <Link to="/studio">Open Live Studio</Link>
@@ -98,7 +114,9 @@ function Hero() {
             </Button>
           </div>
           <p className="mt-3 text-xs text-muted-foreground">
-            Chrome, Edge, Brave · Manifest V3 · v4.0.0 · Reading Focus Ruler included
+            {user
+              ? "Chrome, Edge, Brave · Manifest V3 · v4.0.0 · Reading Focus Ruler included"
+              : "Free account required to download · Chrome, Edge, Brave · Manifest V3"}
           </p>
           <div className="mt-6 flex items-center justify-center gap-5 text-xs text-muted-foreground">
             <span className="inline-flex items-center gap-1.5"><Check className="h-3.5 w-3.5 text-success" /> WCAG 2.2 AA</span>
@@ -464,6 +482,7 @@ const TIERS = [
 ];
 
 function Pricing() {
+  const download = useDownloadExtension();
   return (
     <section className="mx-auto max-w-7xl px-6 py-24">
       <SectionLabel>Pricing</SectionLabel>
@@ -505,7 +524,7 @@ function Pricing() {
                   ? "bg-background text-ink hover:bg-background/90"
                   : "bg-ink text-background hover:bg-ink/90"
               }`}
-              onClick={t.name === "Starter" ? downloadExtension : undefined}
+              onClick={t.name === "Starter" ? download : undefined}
             >
               {t.cta}
             </Button>
@@ -562,6 +581,7 @@ function FAQ() {
 /* ------------------------- CTA ------------------------- */
 
 function CTA() {
+  const download = useDownloadExtension();
   return (
     <section className="mx-auto max-w-7xl px-6 py-24">
       <div className="overflow-hidden rounded-3xl border border-border bg-ink p-12 text-background md:p-16">
@@ -577,7 +597,7 @@ function CTA() {
             <Button size="lg" className="h-11 bg-background px-5 text-ink hover:bg-background/90" asChild>
               <Link to="/studio">Launch Live Studio</Link>
             </Button>
-            <Button size="lg" variant="ghost" className="h-11 px-5 text-background hover:bg-background/10" onClick={downloadExtension}>
+            <Button size="lg" variant="ghost" className="h-11 px-5 text-background hover:bg-background/10" onClick={download}>
               Download Extension <Download className="ml-1.5 h-4 w-4" />
             </Button>
           </div>

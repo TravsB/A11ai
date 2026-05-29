@@ -1,6 +1,7 @@
-import { Link } from "@tanstack/react-router";
-import { Eye } from "lucide-react";
+import { Link, useNavigate } from "@tanstack/react-router";
+import { Eye, LogOut, User as UserIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useAuth } from "@/lib/auth-context";
 
 const nav = [
   { to: "/studio", label: "Live Studio" },
@@ -10,6 +11,14 @@ const nav = [
 ];
 
 export function SiteHeader() {
+  const { user, loading, signOut } = useAuth();
+  const navigate = useNavigate();
+
+  async function handleSignOut() {
+    await signOut();
+    navigate({ to: "/" });
+  }
+
   return (
     <header className="sticky top-0 z-40 border-b border-border/70 bg-background/80 backdrop-blur-xl">
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-6">
@@ -18,9 +27,9 @@ export function SiteHeader() {
             <Eye className="h-4 w-4" strokeWidth={2.25} />
           </div>
           <div className="flex flex-col leading-none">
-            <span className="text-[15px] font-semibold tracking-tight text-ink">VisionAdapt</span>
+            <span className="text-[15px] font-semibold tracking-tight text-ink">Reform Labs</span>
             <span className="text-[10px] font-medium uppercase tracking-[0.14em] text-muted-foreground">
-              Color Engine
+              A11y Platform
             </span>
           </div>
         </Link>
@@ -39,12 +48,28 @@ export function SiteHeader() {
         </nav>
 
         <div className="flex items-center gap-2">
-          <Button variant="ghost" size="sm" className="hidden sm:inline-flex">
-            Sign in
-          </Button>
-          <Button size="sm" className="bg-ink text-background hover:bg-ink/90">
-            Request demo
-          </Button>
+          {loading ? (
+            <div className="h-8 w-24 animate-pulse rounded-md bg-muted" />
+          ) : user ? (
+            <>
+              <div className="hidden items-center gap-2 rounded-md border border-border bg-surface px-2.5 py-1 text-xs sm:flex">
+                <UserIcon className="h-3.5 w-3.5 text-muted-foreground" />
+                <span className="max-w-[160px] truncate text-ink">{user.email}</span>
+              </div>
+              <Button variant="ghost" size="sm" onClick={handleSignOut}>
+                <LogOut className="mr-1.5 h-3.5 w-3.5" /> Sign out
+              </Button>
+            </>
+          ) : (
+            <>
+              <Button variant="ghost" size="sm" className="hidden sm:inline-flex" asChild>
+                <Link to="/login" search={{ mode: "signin" }}>Sign in</Link>
+              </Button>
+              <Button size="sm" className="bg-ink text-background hover:bg-ink/90" asChild>
+                <Link to="/login" search={{ mode: "signup" }}>Sign up</Link>
+              </Button>
+            </>
+          )}
         </div>
       </div>
     </header>
