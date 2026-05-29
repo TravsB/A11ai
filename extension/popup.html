@@ -1,92 +1,13 @@
 <!doctype html>
 <html lang="en">
-<head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Reform Labs — A11y</title>
-<link rel="stylesheet" href="popup.css" />
-</head>
-<body>
-  <header class="brand">
-    <div class="logo" aria-hidden="true">R</div>
-    <div class="brand-text">
-      <div class="title">Reform Labs <span class="muted">/ A11y</span></div>
-      <div class="subtitle">Adaptive accessibility engine · v4.0</div>
-    </div>
-    <label class="switch" title="Toggle engine (Alt+Shift+A)">
-      <input id="enabled" type="checkbox" />
-      <span class="slider"></span>
-    </label>
-  </header>
-
-  <section class="panel">
-    <div class="row">
-      <span class="label">Site context</span>
-      <span id="context" class="badge">analyzing…</span>
-    </div>
-    <button id="apply-suggested" class="ghost-btn" hidden>Apply recommended profile</button>
-  </section>
-
-  <section class="panel">
-    <div class="label">Vision profile</div>
-    <div class="grid modes">
-      <button class="mode" data-mode="none">Standard</button>
-      <button class="mode" data-mode="protanopia">Protanopia</button>
-      <button class="mode" data-mode="deuteranopia">Deuteranopia</button>
-      <button class="mode" data-mode="tritanopia">Tritanopia</button>
-      <button class="mode" data-mode="achromatopsia">Achromatopsia</button>
-      <button class="mode" data-mode="low-contrast">Low contrast</button>
-    </div>
-    <label class="check">
-      <input id="daltonize" type="checkbox" />
-      <span>Daltonize (boost distinguishability)</span>
-    </label>
-  </section>
-
-  <section class="panel">
-    <div class="label">Contrast & typography</div>
-    <div class="row">
-      <span>Contrast</span>
-      <input id="contrastBoost" type="range" min="0" max="100" />
-    </div>
-    <div class="row">
-      <span>Font size</span>
-      <input id="fontSize" type="range" min="80" max="160" step="5" />
-    </div>
-    <div class="row">
-      <span>Line height</span>
-      <input id="lineHeight" type="range" min="80" max="180" step="5" />
-    </div>
-    <label class="check"><input id="readableFont" type="checkbox" /><span>Readable font (Atkinson Hyperlegible)</span></label>
-    <label class="check"><input id="highReadability" type="checkbox" /><span>High readability spacing</span></label>
-    <label class="check"><input id="linkEmphasis" type="checkbox" /><span>Underline links</span></label>
-  </section>
-
-  <section class="panel highlight">
-    <div class="label">
-      <span class="dot"></span> Reading Focus Ruler
-      <span class="kbd">Alt+Shift+R</span>
-    </div>
-    <p class="hint">Dims the page except for a band that follows your cursor — ideal for long-form reading, dyslexia, and focus.</p>
-    <label class="check">
-      <input id="rulerEnabled" type="checkbox" />
-      <span>Enable Reading Focus Ruler</span>
-    </label>
-    <div class="row">
-      <span>Band height</span>
-      <input id="rulerHeight" type="range" min="40" max="320" step="5" />
-    </div>
-    <div class="row">
-      <span>Dim strength</span>
-      <input id="rulerDim" type="range" min="0" max="95" step="5" />
-    </div>
-  </section>
-
-  <footer class="foot">
-    <button id="reset" class="ghost-btn">Reset</button>
-    <span class="muted small">Reform Labs · Built for accessibility</span>
-  </footer>
-
-  <script src="popup.js"></script>
-</body>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>VisionAdapt</title>
+    <script type="module" crossorigin src="/popup-DB5dYp9W.js"></script>
+    <link rel="stylesheet" crossorigin href="/assets/popup-CKOcztwS.css">
+  </head>
+  <body>
+    <div id="root"></div>
+  </body>
 </html>
