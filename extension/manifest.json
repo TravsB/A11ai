@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "Reform Labs — A11y",
-  "version": "4.0.0",
-  "description": "Reform Labs A11y — enterprise adaptive accessibility engine. Real-time color blindness correction, contrast & typography control, contextual per-site adaptation, and the Reading Focus Ruler for distraction-free reading.",
+  "name": "VisionAdapt",
+  "version": "3.0.0",
+  "description": "Phase 3 — Intelligent adaptive accessibility ecosystem powered by the A11y intelligence engine. Real-time color, contrast, typography, and contextual adaptations for color blindness and visual accessibility.",
   "icons": {
     "16": "icons/icon16.png",
     "48": "icons/icon48.png",
@@ -15,7 +15,7 @@
       "48": "icons/icon48.png",
       "128": "icons/icon128.png"
     },
-    "default_title": "Reform Labs — A11y"
+    "default_title": "VisionAdapt — A11y Intelligence"
   },
   "background": {
     "service_worker": "background.js",
@@ -29,16 +29,12 @@
       "all_frames": false
     }
   ],
-  "commands": {
-    "toggle-engine": {
-      "suggested_key": { "default": "Alt+Shift+A" },
-      "description": "Toggle Reform Labs A11y engine"
-    },
-    "toggle-ruler": {
-      "suggested_key": { "default": "Alt+Shift+R" },
-      "description": "Toggle Reading Focus Ruler"
-    }
-  },
-  "permissions": ["storage", "activeTab", "scripting"],
-  "host_permissions": ["<all_urls>"]
+  "permissions": [
+    "storage",
+    "activeTab",
+    "scripting"
+  ],
+  "host_permissions": [
+    "<all_urls>"
+  ]
 }
