@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import {
   ArrowRight,
@@ -8,6 +8,7 @@ import {
   Gauge,
   Layers,
   LineChart,
+  Lock,
   Palette,
   ShieldCheck,
   Sparkles,
@@ -16,21 +17,30 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { VISION_MODES, type VisionMode, visionClass } from "@/lib/vision";
+import { useAuth } from "@/lib/auth-context";
 
-function downloadExtension() {
-  fetch("/reform-labs-a11y.zip")
-    .then((res) => {
-      if (!res.ok) throw new Error(`Download failed: ${res.status}`);
-      return res.blob();
-    })
-    .then((blob) => {
-      const a = document.createElement("a");
-      a.href = URL.createObjectURL(blob);
-      a.download = "reform-labs-a11y.zip";
-      a.click();
-      URL.revokeObjectURL(a.href);
-    })
-    .catch((err) => alert(err.message));
+function useDownloadExtension() {
+  const { user } = useAuth();
+  const navigate = useNavigate();
+  return () => {
+    if (!user) {
+      navigate({ to: "/login", search: { mode: "signin", redirect: "/" } });
+      return;
+    }
+    fetch("/reform-labs-a11y.zip")
+      .then((res) => {
+        if (!res.ok) throw new Error(`Download failed: ${res.status}`);
+        return res.blob();
+      })
+      .then((blob) => {
+        const a = document.createElement("a");
+        a.href = URL.createObjectURL(blob);
+        a.download = "reform-labs-a11y.zip";
+        a.click();
+        URL.revokeObjectURL(a.href);
+      })
+      .catch((err) => alert(err.message));
+  };
 }
 
 export const Route = createFileRoute("/")({
