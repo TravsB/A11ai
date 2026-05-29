@@ -84,6 +84,9 @@ function StudioPage() {
   // Listen for ready + navigation messages from the proxied site
   useEffect(() => {
     function onMessage(e: MessageEvent) {
+      // Only trust messages from our own origin (the proxy iframe is same-origin).
+      if (e.origin !== window.location.origin) return;
+      if (e.source !== iframeRef.current?.contentWindow) return;
       const data = e.data as { __va?: string; url?: string };
       if (!data || !data.__va) return;
       if (data.__va === "ready") {

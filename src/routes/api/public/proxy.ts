@@ -109,6 +109,44 @@ function rewriteHtml(html: string, baseUrl: string): string {
   return html;
 }
 
+function escHtml(s: string): string {
+  return String(s)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+// Block SSRF to internal/cloud-metadata addresses.
+function isBlockedHost(hostname: string): boolean {
+  const h = hostname.toLowerCase().replace(/^\[|\]$/g, "");
+  if (!h) return true;
+  if (h === "localhost" || h.endsWith(".localhost") || h.endsWith(".internal")) return true;
+  if (h === "metadata.google.internal") return true;
+  const m = h.match(/^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/);
+  if (m) {
+    const a = parseInt(m[1]);
+    const b = parseInt(m[2]);
+    if (a === 10) return true;
+    if (a === 127) return true;
+    if (a === 0) return true;
+    if (a === 169 && b === 254) return true; // link-local incl. 169.254.169.254
+    if (a === 172 && b >= 16 && b <= 31) return true;
+    if (a === 192 && b === 168) return true;
+    if (a === 100 && b >= 64 && b <= 127) return true; // CGNAT
+    if (a >= 224) return true; // multicast/reserved
+    return false;
+  }
+  if (h.includes(":")) {
+    if (h === "::1" || h === "::") return true;
+    if (h.startsWith("fe80:") || h.startsWith("fc") || h.startsWith("fd")) return true;
+    if (h.startsWith("::ffff:")) return isBlockedHost(h.slice(7));
+    return true;
+  }
+  return false;
+}
+
 export const Route = createFileRoute("/api/public/proxy")({
   server: {
     handlers: {
@@ -124,6 +162,9 @@ export const Route = createFileRoute("/api/public/proxy")({
         if (target.protocol !== "http:" && target.protocol !== "https:") {
           return new Response("Unsupported protocol", { status: 400 });
         }
+        if (isBlockedHost(target.hostname)) {
+          return new Response("Blocked host", { status: 403 });
+        }
         try {
           const upstream = await fetch(target.toString(), {
             headers: {
@@ -132,12 +173,15 @@ export const Route = createFileRoute("/api/public/proxy")({
               Accept:
                 "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
             },
-            redirect: "follow",
+            redirect: "manual",
           });
+          if (upstream.status >= 300 && upstream.status < 400) {
+            return new Response("Upstream redirect blocked", { status: 502 });
+          }
           const ct = upstream.headers.get("content-type") || "";
           if (!ct.includes("text/html")) {
             return new Response(
-              `<!doctype html><meta charset=utf-8><body style="font:14px system-ui;padding:24px;color:#334155">Cannot preview non-HTML resource (<code>${ct || "unknown"}</code>).</body>`,
+              `<!doctype html><meta charset=utf-8><body style="font:14px system-ui;padding:24px;color:#334155">Cannot preview non-HTML resource (<code>${escHtml(ct || "unknown")}</code>).</body>`,
               { status: 200, headers: { "content-type": "text/html; charset=utf-8" } }
             );
           }
@@ -156,7 +200,7 @@ export const Route = createFileRoute("/api/public/proxy")({
           console.error("proxy fetch failed", err);
           const msg = err instanceof Error ? err.message : "Unknown error";
           return new Response(
-            `<!doctype html><meta charset=utf-8><body style="font:14px system-ui;padding:24px;color:#b91c1c">Failed to load <strong>${target.toString()}</strong><br><br>${msg}</body>`,
+            `<!doctype html><meta charset=utf-8><body style="font:14px system-ui;padding:24px;color:#b91c1c">Failed to load <strong>${escHtml(target.toString())}</strong><br><br>${escHtml(msg)}</body>`,
             { status: 200, headers: { "content-type": "text/html; charset=utf-8" } }
           );
         }
