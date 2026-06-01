@@ -5,7 +5,7 @@ import { Copy, Terminal } from "lucide-react";
 export const Route = createFileRoute("/docs")({
   head: () => ({
     meta: [
-      { title: "Developer SDK — VisionAdapt" },
+      { title: "Developer SDK — A11ai" },
       { name: "description", content: "Drop-in SDK and Chrome extension for adaptive color accessibility." },
     ],
   }),
@@ -53,9 +53,9 @@ function DocsPage() {
             <p className="mt-2 text-sm text-muted-foreground">
               Install via npm or load the universal script.
             </p>
-            <CodeBlock code={`npm install @visionadapt/engine`} lang="bash" />
+            <CodeBlock code={`npm install @a11ai/engine`} lang="bash" />
             <CodeBlock
-              code={`<script src="https://cdn.visionadapt.io/v3/engine.js" data-key="va_pk_live_..."></script>`}
+              code={`<script src="https://cdn.a11ai.io/v3/engine.js" data-key="va_pk_live_..."></script>`}
               lang="html"
             />
           </section>
@@ -63,9 +63,9 @@ function DocsPage() {
           <section id="init">
             <h2 className="text-xl font-semibold text-ink">Initialize</h2>
             <CodeBlock
-              code={`import { VisionAdapt } from "@visionadapt/engine";
+              code={`import { A11ai } from "@a11ai/engine";
 
-const engine = VisionAdapt.init({
+const engine = A11ai.init({
   apiKey: process.env.VA_PUBLIC_KEY!,
   autoProfile: true,        // detect from system + user preference
   preserveBrand: true,      // keep brand identity within WCAG bounds
@@ -131,7 +131,7 @@ engine.on("issue", (e) => console.warn(e.severity, e.message));`}
             <h2 className="text-xl font-semibold text-ink">Browser extension</h2>
             <p className="mt-2 text-sm text-muted-foreground">
               The Chrome (Manifest V3) extension applies the same engine to any website your
-              users visit. Profiles sync via the VisionAdapt account.
+              users visit. Profiles sync via the A11ai account.
             </p>
             <div className="mt-4 flex gap-3">
               <Button className="bg-ink text-background hover:bg-ink/90">Get for Chrome</Button>

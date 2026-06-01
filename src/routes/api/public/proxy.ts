@@ -169,7 +169,7 @@ export const Route = createFileRoute("/api/public/proxy")({
           const upstream = await fetch(target.toString(), {
             headers: {
               "User-Agent":
-                "Mozilla/5.0 (compatible; VisionAdaptStudio/1.0; +https://visionadapt.app)",
+                "Mozilla/5.0 (compatible; A11aiStudio/1.0; +https://a11ai.app)",
               Accept:
                 "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
             },
