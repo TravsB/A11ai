@@ -199,10 +199,8 @@ function MockDashboard() {
         </div>
         <span className="rounded-full bg-success/10 px-2 py-0.5 text-xs font-medium text-success">+12.4%</span>
       </div>
-      <div className="mt-4 grid h-24 grid-cols-7 items-end gap-1.5">
-        {[40, 65, 50, 80, 55, 90, 70].map((h, i) => (
-          <div key={i} className="rounded-sm bg-accent/80" style={{ height: `${h}%` }} />
-        ))}
+      <div className="mt-4 rounded-lg border border-border bg-surface p-3 text-xs text-muted-foreground">
+        Weekly performance summary — semantic states preserved across vision profiles.
       </div>
       <div className="mt-4 grid grid-cols-3 gap-2 text-xs">
         <div className="rounded-md border border-border bg-surface px-2 py-1.5">
