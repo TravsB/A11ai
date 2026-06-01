@@ -52,14 +52,18 @@ export function SiteHeader() {
             <div className="h-8 w-24 animate-pulse rounded-md bg-muted" />
           ) : user ? (
             <>
-              <div className="hidden items-center gap-2 rounded-md border border-border bg-surface px-2.5 py-1 text-xs sm:flex">
+              <Link
+                to="/profile"
+                className="hidden items-center gap-2 rounded-md border border-border bg-surface px-2.5 py-1 text-xs transition-colors hover:bg-muted sm:flex"
+              >
                 <UserIcon className="h-3.5 w-3.5 text-muted-foreground" />
                 <span className="max-w-[160px] truncate text-ink">{user.email}</span>
-              </div>
+              </Link>
               <Button variant="ghost" size="sm" onClick={handleSignOut}>
                 <LogOut className="mr-1.5 h-3.5 w-3.5" /> Sign out
               </Button>
             </>
+
           ) : (
             <>
               <Button variant="ghost" size="sm" className="hidden sm:inline-flex" asChild>

@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as StudioRouteImport } from './routes/studio'
+import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as PaletteRouteImport } from './routes/palette'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as DocsRouteImport } from './routes/docs'
@@ -20,6 +21,11 @@ import { Route as ApiPublicProxyRouteImport } from './routes/api/public/proxy'
 const StudioRoute = StudioRouteImport.update({
   id: '/studio',
   path: '/studio',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProfileRoute = ProfileRouteImport.update({
+  id: '/profile',
+  path: '/profile',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PaletteRoute = PaletteRouteImport.update({
@@ -59,6 +65,7 @@ export interface FileRoutesByFullPath {
   '/docs': typeof DocsRoute
   '/login': typeof LoginRoute
   '/palette': typeof PaletteRoute
+  '/profile': typeof ProfileRoute
   '/studio': typeof StudioRoute
   '/api/public/proxy': typeof ApiPublicProxyRoute
 }
@@ -68,6 +75,7 @@ export interface FileRoutesByTo {
   '/docs': typeof DocsRoute
   '/login': typeof LoginRoute
   '/palette': typeof PaletteRoute
+  '/profile': typeof ProfileRoute
   '/studio': typeof StudioRoute
   '/api/public/proxy': typeof ApiPublicProxyRoute
 }
@@ -78,6 +86,7 @@ export interface FileRoutesById {
   '/docs': typeof DocsRoute
   '/login': typeof LoginRoute
   '/palette': typeof PaletteRoute
+  '/profile': typeof ProfileRoute
   '/studio': typeof StudioRoute
   '/api/public/proxy': typeof ApiPublicProxyRoute
 }
@@ -89,6 +98,7 @@ export interface FileRouteTypes {
     | '/docs'
     | '/login'
     | '/palette'
+    | '/profile'
     | '/studio'
     | '/api/public/proxy'
   fileRoutesByTo: FileRoutesByTo
@@ -98,6 +108,7 @@ export interface FileRouteTypes {
     | '/docs'
     | '/login'
     | '/palette'
+    | '/profile'
     | '/studio'
     | '/api/public/proxy'
   id:
@@ -107,6 +118,7 @@ export interface FileRouteTypes {
     | '/docs'
     | '/login'
     | '/palette'
+    | '/profile'
     | '/studio'
     | '/api/public/proxy'
   fileRoutesById: FileRoutesById
@@ -117,6 +129,7 @@ export interface RootRouteChildren {
   DocsRoute: typeof DocsRoute
   LoginRoute: typeof LoginRoute
   PaletteRoute: typeof PaletteRoute
+  ProfileRoute: typeof ProfileRoute
   StudioRoute: typeof StudioRoute
   ApiPublicProxyRoute: typeof ApiPublicProxyRoute
 }
@@ -128,6 +141,13 @@ declare module '@tanstack/react-router' {
       path: '/studio'
       fullPath: '/studio'
       preLoaderRoute: typeof StudioRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/profile': {
+      id: '/profile'
+      path: '/profile'
+      fullPath: '/profile'
+      preLoaderRoute: typeof ProfileRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/palette': {
@@ -181,6 +201,7 @@ const rootRouteChildren: RootRouteChildren = {
   DocsRoute: DocsRoute,
   LoginRoute: LoginRoute,
   PaletteRoute: PaletteRoute,
+  ProfileRoute: ProfileRoute,
   StudioRoute: StudioRoute,
   ApiPublicProxyRoute: ApiPublicProxyRoute,
 }
