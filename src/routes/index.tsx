@@ -46,7 +46,7 @@ function useDownloadExtension() {
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Reform Labs A11y — Adaptive Accessibility Platform" },
+      { title: "A11ai — Adaptive Accessibility Platform" },
       {
         name: "description",
         content:
@@ -94,14 +94,14 @@ function Hero() {
             </span>
           </h1>
           <p className="mx-auto mt-6 max-w-2xl text-pretty text-lg text-muted-foreground">
-            Reform Labs A11y is an adaptive color engine that transforms any website in real
+            A11ai is an adaptive color engine that transforms any website in real
             time for protanopia, deuteranopia, tritanopia, and low-vision users —
             without breaking layout, branding, or function.
           </p>
           <div className="mt-9 flex flex-wrap items-center justify-center gap-3">
             <Button size="lg" className="h-11 bg-ink px-5 text-background hover:bg-ink/90" onClick={download}>
               {user ? (
-                <>Download Reform Labs A11y <Download className="ml-1.5 h-4 w-4" /></>
+                <>Download A11ai <Download className="ml-1.5 h-4 w-4" /></>
               ) : (
                 <>Sign in to download <Lock className="ml-1.5 h-4 w-4" /></>
               )}
@@ -145,7 +145,7 @@ function HeroPreview() {
             </div>
             <div className="hidden flex-1 px-6 sm:block">
               <div className="mx-auto h-7 max-w-md rounded-md border border-border bg-background px-3 py-1 text-center text-xs leading-5 text-muted-foreground">
-                https://visionadapt.io/studio
+                https://a11ai.io/studio
               </div>
             </div>
             <div className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
@@ -539,7 +539,7 @@ function Pricing() {
 
 const FAQS = [
   {
-    q: "Does Reform Labs A11y break my site's layout?",
+    q: "Does A11ai break my site's layout?",
     a: "No. The engine performs scoped CSS overrides and runs a layout-integrity check after each injection. Branding tokens are preserved within accessibility bounds.",
   },
   {

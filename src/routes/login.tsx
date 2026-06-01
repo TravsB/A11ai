@@ -18,8 +18,8 @@ export const Route = createFileRoute("/login")({
   validateSearch: searchSchema,
   head: () => ({
     meta: [
-      { title: "Sign in — Reform Labs A11y" },
-      { name: "description", content: "Sign in or create an account to download the Reform Labs A11y extension." },
+      { title: "Sign in — A11ai" },
+      { name: "description", content: "Sign in or create an account to download the A11ai extension." },
     ],
   }),
   component: LoginPage,
@@ -117,7 +117,7 @@ function LoginPage() {
           <div className="grid h-9 w-9 place-items-center rounded-lg bg-ink text-background">
             <Eye className="h-4 w-4" strokeWidth={2.25} />
           </div>
-          <span className="text-lg font-semibold tracking-tight text-ink">Reform Labs A11y</span>
+          <span className="text-lg font-semibold tracking-tight text-ink">A11ai</span>
         </Link>
         <h1 className="mt-6 text-2xl font-semibold tracking-tight text-ink">
           {tab === "signin" ? "Welcome back" : "Create your account"}
@@ -125,7 +125,7 @@ function LoginPage() {
         <p className="mt-1.5 text-sm text-muted-foreground">
           {tab === "signin"
             ? "Sign in to download the extension and access the platform."
-            : "Sign up to unlock the Reform Labs A11y extension and Studio."}
+            : "Sign up to unlock the A11ai extension and Studio."}
         </p>
       </div>
 

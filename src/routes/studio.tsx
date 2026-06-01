@@ -20,7 +20,7 @@ import { VISION_MODES, type VisionMode } from "@/lib/vision";
 export const Route = createFileRoute("/studio")({
   head: () => ({
     meta: [
-      { title: "Live Studio — VisionAdapt" },
+      { title: "Live Studio — A11ai" },
       {
         name: "description",
         content:
@@ -365,7 +365,7 @@ function StudioPage() {
                   ref={iframeRef}
                   key={proxySrc}
                   src={proxySrc}
-                  title="VisionAdapt preview"
+                  title="A11ai preview"
                   className="h-full w-full border-0"
                   sandbox="allow-scripts allow-same-origin allow-forms allow-popups"
                   referrerPolicy="no-referrer"

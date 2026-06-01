@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 export const Route = createFileRoute("/dashboard")({
   head: () => ({
     meta: [
-      { title: "Dashboard — VisionAdapt" },
+      { title: "Dashboard — A11ai" },
       { name: "description", content: "Accessibility score, detected issues, and compliance analytics." },
     ],
   }),

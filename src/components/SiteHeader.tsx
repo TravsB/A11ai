@@ -27,7 +27,7 @@ export function SiteHeader() {
             <Eye className="h-4 w-4" strokeWidth={2.25} />
           </div>
           <div className="flex flex-col leading-none">
-            <span className="text-[15px] font-semibold tracking-tight text-ink">Reform Labs</span>
+            <span className="text-[15px] font-semibold tracking-tight text-ink">A11ai</span>
             <span className="text-[10px] font-medium uppercase tracking-[0.14em] text-muted-foreground">
               A11y Platform
             </span>

@@ -8,7 +8,7 @@ import { VISION_MODES, type VisionMode, visionClass } from "@/lib/vision";
 export const Route = createFileRoute("/palette")({
   head: () => ({
     meta: [
-      { title: "Palette Generator — VisionAdapt" },
+      { title: "Palette Generator — A11ai" },
       { name: "description", content: "Generate accessibility-safe palettes that preserve brand identity and pass WCAG." },
     ],
   }),
