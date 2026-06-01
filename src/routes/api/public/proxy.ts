@@ -166,18 +166,38 @@ export const Route = createFileRoute("/api/public/proxy")({
           return new Response("Blocked host", { status: 403 });
         }
         try {
-          const upstream = await fetch(target.toString(), {
-            headers: {
-              "User-Agent":
-                "Mozilla/5.0 (compatible; A11aiStudio/1.0; +https://a11ai.app)",
-              Accept:
-                "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-            },
-            redirect: "manual",
-          });
-          if (upstream.status >= 300 && upstream.status < 400) {
-            return new Response("Upstream redirect blocked", { status: 502 });
+          let currentUrl = target.toString();
+          let upstream: Response | null = null;
+          const maxHops = 5;
+          for (let i = 0; i < maxHops; i++) {
+            const hopUrl = new URL(currentUrl);
+            if (hopUrl.protocol !== "http:" && hopUrl.protocol !== "https:") {
+              return new Response("Unsupported protocol in redirect", { status: 400 });
+            }
+            if (isBlockedHost(hopUrl.hostname)) {
+              return new Response("Blocked host in redirect", { status: 403 });
+            }
+            upstream = await fetch(currentUrl, {
+              headers: {
+                "User-Agent":
+                  "Mozilla/5.0 (compatible; A11aiStudio/1.0; +https://a11ai.app)",
+                Accept:
+                  "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+              },
+              redirect: "manual",
+            });
+            if (upstream.status >= 300 && upstream.status < 400) {
+              const loc = upstream.headers.get("location");
+              if (!loc) break;
+              currentUrl = new URL(loc, currentUrl).toString();
+              continue;
+            }
+            break;
           }
+          if (!upstream) {
+            return new Response("Too many redirects", { status: 502 });
+          }
+
           const ct = upstream.headers.get("content-type") || "";
           if (!ct.includes("text/html")) {
             return new Response(
