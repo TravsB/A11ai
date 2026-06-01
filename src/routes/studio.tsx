@@ -56,9 +56,25 @@ function StudioPage() {
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const currentUrl = cursor >= 0 ? history[cursor] : "";
 
+  const proxyOrigin = useMemo(() => {
+    if (typeof window === "undefined") return "";
+    const host = window.location.host;
+    // The in-editor preview origin (*.lovableproject.com) is static and has no
+    // server backend, so server routes 404 / refuse to connect. Route through
+    // the stable preview/published Workers URL when we're inside that origin.
+    if (host.endsWith(".lovableproject.com")) {
+      const id = host.split(".")[0].replace(/^id-preview--/, "");
+      return `https://project--${id}-dev.lovable.app`;
+    }
+    return window.location.origin;
+  }, []);
+
   const proxySrc = useMemo(
-    () => (currentUrl ? `/api/public/proxy?url=${encodeURIComponent(currentUrl)}` : ""),
-    [currentUrl]
+    () =>
+      currentUrl
+        ? `${proxyOrigin}/api/public/proxy?url=${encodeURIComponent(currentUrl)}`
+        : "",
+    [currentUrl, proxyOrigin]
   );
 
   // Push config to iframe whenever settings change
@@ -84,9 +100,9 @@ function StudioPage() {
   // Listen for ready + navigation messages from the proxied site
   useEffect(() => {
     function onMessage(e: MessageEvent) {
-      // Only trust messages from our own origin (the proxy iframe is same-origin).
-      if (e.origin !== window.location.origin) return;
+      // Trust messages from the proxy iframe we created (same window source).
       if (e.source !== iframeRef.current?.contentWindow) return;
+      if (proxyOrigin && e.origin !== proxyOrigin && e.origin !== window.location.origin) return;
       const data = e.data as { __va?: string; url?: string };
       if (!data || !data.__va) return;
       if (data.__va === "ready") {
