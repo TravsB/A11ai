@@ -318,6 +318,69 @@ function StudioPage() {
             </div>
           </div>
 
+          {/* Saved bookmarks */}
+          <div>
+            <div className="flex items-center justify-between">
+              <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                Saved sessions
+              </Label>
+              {user && (
+                <button
+                  onClick={saveBookmark}
+                  className="inline-flex items-center gap-1 rounded text-[11px] font-medium text-accent hover:underline disabled:opacity-40"
+                  disabled={!currentUrl}
+                  title="Save current URL + settings"
+                >
+                  <BookmarkPlus className="h-3.5 w-3.5" /> Save
+                </button>
+              )}
+            </div>
+            {!user ? (
+              <p className="mt-2 text-xs text-muted-foreground">
+                <Link to="/login" className="text-accent hover:underline">
+                  Sign in
+                </Link>{" "}
+                to bookmark websites with your preferred accessibility settings.
+              </p>
+            ) : bookmarksLoading ? (
+              <p className="mt-2 text-xs text-muted-foreground">Loading…</p>
+            ) : bookmarks.length === 0 ? (
+              <p className="mt-2 text-xs text-muted-foreground">
+                No saved sessions yet. Load a URL, tune your settings, then click Save.
+              </p>
+            ) : (
+              <ul className="mt-2 space-y-1">
+                {bookmarks.map((b) => (
+                  <li
+                    key={b.id}
+                    className="group flex items-center gap-1.5 rounded-md border border-border bg-surface px-2 py-1.5 transition hover:bg-muted"
+                  >
+                    <Bookmark className="h-3.5 w-3.5 shrink-0 text-accent" />
+                    <button
+                      onClick={() => applyBookmark(b)}
+                      className="min-w-0 flex-1 text-left"
+                      title={b.url}
+                    >
+                      <div className="truncate text-xs font-medium text-ink">
+                        {b.label}
+                      </div>
+                      <div className="truncate text-[10px] text-muted-foreground">
+                        {b.vision_profile} · {Number(b.contrast_level ?? 100)}%
+                      </div>
+                    </button>
+                    <button
+                      onClick={() => deleteBookmark(b.id)}
+                      className="rounded p-1 text-muted-foreground opacity-0 transition hover:bg-background hover:text-destructive group-hover:opacity-100"
+                      aria-label="Delete bookmark"
+                    >
+                      <Trash2 className="h-3 w-3" />
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+
           <div>
             <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
               Vision profile
