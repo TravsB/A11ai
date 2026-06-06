@@ -1,13 +1,16 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   ArrowLeft,
   ArrowRight,
+  Bookmark,
+  BookmarkPlus,
   Globe,
   Link2,
   Loader2,
   RotateCcw,
   Sparkles,
+  Trash2,
   Type,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -16,6 +19,21 @@ import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { VISION_MODES, type VisionMode } from "@/lib/vision";
+import { useAuth } from "@/lib/auth-context";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
+
+interface StudioBookmark {
+  id: string;
+  label: string;
+  url: string;
+  vision_profile: string | null;
+  contrast_level: number | null;
+  font_scale: number | null;
+  link_highlight: boolean | null;
+  dyslexia: boolean | null;
+  daltonize: boolean | null;
+}
 
 export const Route = createFileRoute("/studio")({
   head: () => ({
