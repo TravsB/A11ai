@@ -74,12 +74,91 @@ function StudioPage() {
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const currentUrl = cursor >= 0 ? history[cursor] : "";
 
+  const { user } = useAuth();
+  const [bookmarks, setBookmarks] = useState<StudioBookmark[]>([]);
+  const [bookmarksLoading, setBookmarksLoading] = useState(false);
+
+  const fetchBookmarks = useCallback(async () => {
+    if (!user) {
+      setBookmarks([]);
+      return;
+    }
+    setBookmarksLoading(true);
+    const { data, error } = await (supabase as any)
+      .from("studio_bookmarks")
+      .select("*")
+      .order("created_at", { ascending: false });
+    setBookmarksLoading(false);
+    if (error) {
+      toast.error("Could not load bookmarks");
+      return;
+    }
+    setBookmarks((data ?? []) as StudioBookmark[]);
+  }, [user]);
+
+  useEffect(() => {
+    fetchBookmarks();
+  }, [fetchBookmarks]);
+
+  async function saveBookmark() {
+    if (!user) {
+      toast.error("Sign in to save bookmarks");
+      return;
+    }
+    if (!currentUrl) {
+      toast.error("Load a URL first");
+      return;
+    }
+    let label = "";
+    try {
+      label = new URL(currentUrl).hostname.replace(/^www\./, "");
+    } catch {
+      label = currentUrl;
+    }
+    const { error } = await (supabase as any).from("studio_bookmarks").insert({
+      user_id: user.id,
+      label,
+      url: currentUrl,
+      vision_profile: mode,
+      contrast_level: contrast[0],
+      font_scale: fontScale[0],
+      link_highlight: linkHighlight,
+      dyslexia,
+      daltonize,
+    });
+    if (error) {
+      toast.error("Failed to save bookmark");
+      return;
+    }
+    toast.success("Bookmark saved");
+    fetchBookmarks();
+  }
+
+  async function deleteBookmark(id: string) {
+    const { error } = await (supabase as any)
+      .from("studio_bookmarks")
+      .delete()
+      .eq("id", id);
+    if (error) {
+      toast.error("Failed to delete bookmark");
+      return;
+    }
+    setBookmarks((prev) => prev.filter((b) => b.id !== id));
+  }
+
+  function applyBookmark(b: StudioBookmark) {
+    if (b.vision_profile) setMode(b.vision_profile as VisionMode);
+    if (b.contrast_level != null) setContrast([Number(b.contrast_level)]);
+    if (b.font_scale != null) setFontScale([Number(b.font_scale)]);
+    if (b.link_highlight != null) setLinkHighlight(b.link_highlight);
+    if (b.dyslexia != null) setDyslexia(b.dyslexia);
+    if (b.daltonize != null) setDaltonize(b.daltonize);
+    loadUrl(b.url);
+  }
+
   const proxyOrigin = useMemo(() => {
     if (typeof window === "undefined") return "";
     const host = window.location.host;
-    // The in-editor preview origin (*.lovableproject.com) is static and has no
-    // server backend, so server routes 404 / refuse to connect. Route through
-    // the stable preview/published Workers URL when we're inside that origin.
     if (host.endsWith(".lovableproject.com")) {
       const id = host.split(".")[0].replace(/^id-preview--/, "");
       return `https://project--${id}-dev.lovable.app`;
