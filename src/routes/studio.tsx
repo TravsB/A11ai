@@ -1,13 +1,16 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   ArrowLeft,
   ArrowRight,
+  Bookmark,
+  BookmarkPlus,
   Globe,
   Link2,
   Loader2,
   RotateCcw,
   Sparkles,
+  Trash2,
   Type,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -16,6 +19,21 @@ import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { VISION_MODES, type VisionMode } from "@/lib/vision";
+import { useAuth } from "@/lib/auth-context";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
+
+interface StudioBookmark {
+  id: string;
+  label: string;
+  url: string;
+  vision_profile: string | null;
+  contrast_level: number | null;
+  font_scale: number | null;
+  link_highlight: boolean | null;
+  dyslexia: boolean | null;
+  daltonize: boolean | null;
+}
 
 export const Route = createFileRoute("/studio")({
   head: () => ({
@@ -56,12 +74,91 @@ function StudioPage() {
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const currentUrl = cursor >= 0 ? history[cursor] : "";
 
+  const { user } = useAuth();
+  const [bookmarks, setBookmarks] = useState<StudioBookmark[]>([]);
+  const [bookmarksLoading, setBookmarksLoading] = useState(false);
+
+  const fetchBookmarks = useCallback(async () => {
+    if (!user) {
+      setBookmarks([]);
+      return;
+    }
+    setBookmarksLoading(true);
+    const { data, error } = await (supabase as any)
+      .from("studio_bookmarks")
+      .select("*")
+      .order("created_at", { ascending: false });
+    setBookmarksLoading(false);
+    if (error) {
+      toast.error("Could not load bookmarks");
+      return;
+    }
+    setBookmarks((data ?? []) as StudioBookmark[]);
+  }, [user]);
+
+  useEffect(() => {
+    fetchBookmarks();
+  }, [fetchBookmarks]);
+
+  async function saveBookmark() {
+    if (!user) {
+      toast.error("Sign in to save bookmarks");
+      return;
+    }
+    if (!currentUrl) {
+      toast.error("Load a URL first");
+      return;
+    }
+    let label = "";
+    try {
+      label = new URL(currentUrl).hostname.replace(/^www\./, "");
+    } catch {
+      label = currentUrl;
+    }
+    const { error } = await (supabase as any).from("studio_bookmarks").insert({
+      user_id: user.id,
+      label,
+      url: currentUrl,
+      vision_profile: mode,
+      contrast_level: contrast[0],
+      font_scale: fontScale[0],
+      link_highlight: linkHighlight,
+      dyslexia,
+      daltonize,
+    });
+    if (error) {
+      toast.error("Failed to save bookmark");
+      return;
+    }
+    toast.success("Bookmark saved");
+    fetchBookmarks();
+  }
+
+  async function deleteBookmark(id: string) {
+    const { error } = await (supabase as any)
+      .from("studio_bookmarks")
+      .delete()
+      .eq("id", id);
+    if (error) {
+      toast.error("Failed to delete bookmark");
+      return;
+    }
+    setBookmarks((prev) => prev.filter((b) => b.id !== id));
+  }
+
+  function applyBookmark(b: StudioBookmark) {
+    if (b.vision_profile) setMode(b.vision_profile as VisionMode);
+    if (b.contrast_level != null) setContrast([Number(b.contrast_level)]);
+    if (b.font_scale != null) setFontScale([Number(b.font_scale)]);
+    if (b.link_highlight != null) setLinkHighlight(b.link_highlight);
+    if (b.dyslexia != null) setDyslexia(b.dyslexia);
+    if (b.daltonize != null) setDaltonize(b.daltonize);
+    loadUrl(b.url);
+  }
+
   const proxyOrigin = useMemo(() => {
     if (typeof window === "undefined") return "";
     const host = window.location.host;
-    // The in-editor preview origin (*.lovableproject.com) is static and has no
-    // server backend, so server routes 404 / refuse to connect. Route through
-    // the stable preview/published Workers URL when we're inside that origin.
     if (host.endsWith(".lovableproject.com")) {
       const id = host.split(".")[0].replace(/^id-preview--/, "");
       return `https://project--${id}-dev.lovable.app`;
@@ -219,6 +316,69 @@ function StudioPage() {
                 </button>
               ))}
             </div>
+          </div>
+
+          {/* Saved bookmarks */}
+          <div>
+            <div className="flex items-center justify-between">
+              <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                Saved sessions
+              </Label>
+              {user && (
+                <button
+                  onClick={saveBookmark}
+                  className="inline-flex items-center gap-1 rounded text-[11px] font-medium text-accent hover:underline disabled:opacity-40"
+                  disabled={!currentUrl}
+                  title="Save current URL + settings"
+                >
+                  <BookmarkPlus className="h-3.5 w-3.5" /> Save
+                </button>
+              )}
+            </div>
+            {!user ? (
+              <p className="mt-2 text-xs text-muted-foreground">
+                <Link to="/login" className="text-accent hover:underline">
+                  Sign in
+                </Link>{" "}
+                to bookmark websites with your preferred accessibility settings.
+              </p>
+            ) : bookmarksLoading ? (
+              <p className="mt-2 text-xs text-muted-foreground">Loading…</p>
+            ) : bookmarks.length === 0 ? (
+              <p className="mt-2 text-xs text-muted-foreground">
+                No saved sessions yet. Load a URL, tune your settings, then click Save.
+              </p>
+            ) : (
+              <ul className="mt-2 space-y-1">
+                {bookmarks.map((b) => (
+                  <li
+                    key={b.id}
+                    className="group flex items-center gap-1.5 rounded-md border border-border bg-surface px-2 py-1.5 transition hover:bg-muted"
+                  >
+                    <Bookmark className="h-3.5 w-3.5 shrink-0 text-accent" />
+                    <button
+                      onClick={() => applyBookmark(b)}
+                      className="min-w-0 flex-1 text-left"
+                      title={b.url}
+                    >
+                      <div className="truncate text-xs font-medium text-ink">
+                        {b.label}
+                      </div>
+                      <div className="truncate text-[10px] text-muted-foreground">
+                        {b.vision_profile} · {Number(b.contrast_level ?? 100)}%
+                      </div>
+                    </button>
+                    <button
+                      onClick={() => deleteBookmark(b.id)}
+                      className="rounded p-1 text-muted-foreground opacity-0 transition hover:bg-background hover:text-destructive group-hover:opacity-100"
+                      aria-label="Delete bookmark"
+                    >
+                      <Trash2 className="h-3 w-3" />
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
           </div>
 
           <div>

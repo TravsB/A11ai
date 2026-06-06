@@ -56,6 +56,51 @@ export type Database = {
         }
         Relationships: []
       }
+      studio_bookmarks: {
+        Row: {
+          contrast_level: number | null
+          created_at: string
+          daltonize: boolean | null
+          dyslexia: boolean | null
+          font_scale: number | null
+          id: string
+          label: string
+          link_highlight: boolean | null
+          updated_at: string
+          url: string
+          user_id: string
+          vision_profile: string | null
+        }
+        Insert: {
+          contrast_level?: number | null
+          created_at?: string
+          daltonize?: boolean | null
+          dyslexia?: boolean | null
+          font_scale?: number | null
+          id?: string
+          label: string
+          link_highlight?: boolean | null
+          updated_at?: string
+          url: string
+          user_id: string
+          vision_profile?: string | null
+        }
+        Update: {
+          contrast_level?: number | null
+          created_at?: string
+          daltonize?: boolean | null
+          dyslexia?: boolean | null
+          font_scale?: number | null
+          id?: string
+          label?: string
+          link_highlight?: boolean | null
+          updated_at?: string
+          url?: string
+          user_id?: string
+          vision_profile?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
