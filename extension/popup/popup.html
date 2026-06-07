@@ -1,0 +1,603 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>VisionAdapt — Polymorph AI</title>
+    <style>
+      * { box-sizing: border-box; margin: 0; padding: 0; }
+
+      body {
+        width: 360px;
+        min-height: 480px;
+        font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', system-ui, sans-serif;
+        background: #0f0f13;
+        color: #e8e8f0;
+        font-size: 14px;
+      }
+
+      /* ── Header ── */
+      .header {
+        background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+        padding: 16px 18px 14px;
+        border-bottom: 1px solid rgba(255,255,255,0.06);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+
+      .logo {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .logo-icon {
+        width: 32px;
+        height: 32px;
+        background: linear-gradient(135deg, #6366f1, #8b5cf6);
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 18px;
+        flex-shrink: 0;
+        box-shadow: 0 4px 12px rgba(99,102,241,0.4);
+      }
+
+      .logo-text {
+        display: flex;
+        flex-direction: column;
+        line-height: 1.2;
+      }
+
+      .logo-name {
+        font-size: 13px;
+        font-weight: 700;
+        color: #fff;
+        letter-spacing: 0.01em;
+      }
+
+      .logo-sub {
+        font-size: 10px;
+        color: #7c7caa;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+      }
+
+      /* Master power toggle */
+      .power-toggle {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        cursor: pointer;
+        user-select: none;
+      }
+
+      .power-label {
+        font-size: 11px;
+        color: #7c7caa;
+        font-weight: 600;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+      }
+
+      .toggle-switch {
+        position: relative;
+        width: 40px;
+        height: 22px;
+        cursor: pointer;
+      }
+
+      .toggle-switch input {
+        opacity: 0;
+        width: 0;
+        height: 0;
+        position: absolute;
+      }
+
+      .toggle-track {
+        position: absolute;
+        inset: 0;
+        background: #2a2a3e;
+        border-radius: 11px;
+        transition: background 0.2s ease;
+        border: 1px solid rgba(255,255,255,0.08);
+      }
+
+      .toggle-thumb {
+        position: absolute;
+        top: 3px;
+        left: 3px;
+        width: 14px;
+        height: 14px;
+        background: #555;
+        border-radius: 50%;
+        transition: transform 0.2s ease, background 0.2s ease;
+      }
+
+      .toggle-switch input:checked + .toggle-track { background: #6366f1; }
+      .toggle-switch input:checked ~ .toggle-thumb { transform: translateX(18px); background: #fff; }
+
+      /* ── Site Info Bar ── */
+      .site-bar {
+        background: rgba(255,255,255,0.03);
+        padding: 10px 18px;
+        border-bottom: 1px solid rgba(255,255,255,0.05);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .site-icon {
+        width: 16px;
+        height: 16px;
+        border-radius: 3px;
+        background: #2a2a3e;
+        flex-shrink: 0;
+        overflow: hidden;
+      }
+
+      .site-icon img { width: 100%; height: 100%; object-fit: cover; }
+
+      .site-name {
+        font-size: 12px;
+        color: #9494b8;
+        flex: 1;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .site-badge {
+        font-size: 10px;
+        font-weight: 700;
+        padding: 2px 7px;
+        border-radius: 10px;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        flex-shrink: 0;
+      }
+
+      .site-badge.ai { background: rgba(99,102,241,0.2); color: #818cf8; }
+      .site-badge.saved { background: rgba(16,185,129,0.2); color: #34d399; }
+      .site-badge.manual { background: rgba(245,158,11,0.2); color: #fbbf24; }
+
+      /* ── AI Panel ── */
+      .ai-panel {
+        margin: 14px 18px 0;
+        background: linear-gradient(135deg, rgba(99,102,241,0.1), rgba(139,92,246,0.08));
+        border: 1px solid rgba(99,102,241,0.2);
+        border-radius: 12px;
+        overflow: hidden;
+      }
+
+      .ai-header {
+        padding: 12px 14px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .ai-header-icon {
+        font-size: 20px;
+        line-height: 1;
+      }
+
+      .ai-header-text {
+        flex: 1;
+      }
+
+      .ai-title {
+        font-size: 13px;
+        font-weight: 700;
+        color: #a5b4fc;
+      }
+
+      .ai-subtitle {
+        font-size: 11px;
+        color: #6366f1;
+        margin-top: 1px;
+      }
+
+      .ai-toggle-row {
+        display: flex;
+        align-items: center;
+      }
+
+      .ai-reason {
+        padding: 0 14px 12px;
+        font-size: 11px;
+        color: #7c7caa;
+        line-height: 1.5;
+        display: none;
+      }
+
+      .ai-reason.visible { display: block; }
+
+      /* ── Applied Settings Grid ── */
+      .applied-grid {
+        margin: 12px 18px 0;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+      }
+
+      .applied-chip {
+        background: rgba(255,255,255,0.04);
+        border: 1px solid rgba(255,255,255,0.07);
+        border-radius: 8px;
+        padding: 8px 10px;
+        display: flex;
+        align-items: center;
+        gap: 7px;
+      }
+
+      .chip-icon { font-size: 14px; flex-shrink: 0; }
+
+      .chip-info { flex: 1; min-width: 0; }
+
+      .chip-label {
+        font-size: 10px;
+        color: #5c5c7c;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        font-weight: 600;
+      }
+
+      .chip-value {
+        font-size: 12px;
+        font-weight: 600;
+        color: #c4c4e0;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .chip-value.active { color: #818cf8; }
+
+      /* ── Manual Controls ── */
+      .controls-section {
+        margin: 14px 18px 0;
+      }
+
+      .section-title {
+        font-size: 10px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        color: #5c5c7c;
+        margin-bottom: 10px;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+
+      .section-title::after {
+        content: '';
+        flex: 1;
+        height: 1px;
+        background: rgba(255,255,255,0.06);
+      }
+
+      .control-row {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 10px;
+      }
+
+      .control-label {
+        font-size: 12px;
+        color: #9494b8;
+        width: 100px;
+        flex-shrink: 0;
+      }
+
+      .control-input {
+        flex: 1;
+      }
+
+      select {
+        width: 100%;
+        background: #1a1a2e;
+        border: 1px solid rgba(255,255,255,0.1);
+        color: #e8e8f0;
+        border-radius: 7px;
+        padding: 6px 8px;
+        font-size: 12px;
+        cursor: pointer;
+        outline: none;
+        appearance: none;
+        -webkit-appearance: none;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' fill='none'%3E%3Cpath stroke='%236366f1' stroke-width='1.5' stroke-linecap='round' d='M1 1l4 4 4-4'/%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: right 8px center;
+        padding-right: 24px;
+      }
+
+      select:focus { border-color: #6366f1; }
+
+      .range-wrap {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      input[type=range] {
+        flex: 1;
+        height: 4px;
+        -webkit-appearance: none;
+        appearance: none;
+        background: #2a2a3e;
+        border-radius: 2px;
+        outline: none;
+        cursor: pointer;
+      }
+
+      input[type=range]::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        width: 14px;
+        height: 14px;
+        background: #6366f1;
+        border-radius: 50%;
+        box-shadow: 0 0 0 3px rgba(99,102,241,0.25);
+      }
+
+      .range-val {
+        font-size: 11px;
+        font-weight: 700;
+        color: #6366f1;
+        width: 30px;
+        text-align: right;
+        flex-shrink: 0;
+      }
+
+      .checkbox-row {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 8px;
+        cursor: pointer;
+        user-select: none;
+      }
+
+      .checkbox-row input[type=checkbox] {
+        width: 15px;
+        height: 15px;
+        accent-color: #6366f1;
+        cursor: pointer;
+      }
+
+      .checkbox-label {
+        font-size: 12px;
+        color: #9494b8;
+      }
+
+      /* ── Footer Buttons ── */
+      .footer {
+        padding: 14px 18px 16px;
+        display: flex;
+        gap: 8px;
+        border-top: 1px solid rgba(255,255,255,0.05);
+        margin-top: 14px;
+      }
+
+      .btn {
+        flex: 1;
+        padding: 8px 0;
+        border-radius: 8px;
+        border: none;
+        font-size: 12px;
+        font-weight: 600;
+        cursor: pointer;
+        letter-spacing: 0.02em;
+        transition: opacity 0.15s, transform 0.1s;
+      }
+
+      .btn:active { transform: scale(0.97); }
+
+      .btn-primary {
+        background: linear-gradient(135deg, #6366f1, #8b5cf6);
+        color: #fff;
+      }
+
+      .btn-secondary {
+        background: rgba(255,255,255,0.06);
+        color: #9494b8;
+        border: 1px solid rgba(255,255,255,0.08);
+      }
+
+      .btn-danger {
+        background: rgba(220,38,38,0.15);
+        color: #f87171;
+        border: 1px solid rgba(220,38,38,0.2);
+      }
+
+      .btn:hover { opacity: 0.88; }
+
+      /* ── Status indicator ── */
+      .status-dot {
+        display: inline-block;
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        background: #ef4444;
+        margin-right: 5px;
+        vertical-align: middle;
+        transition: background 0.2s;
+      }
+
+      .status-dot.on { background: #10b981; box-shadow: 0 0 6px rgba(16,185,129,0.5); }
+
+      .disabled-overlay {
+        opacity: 0.35;
+        pointer-events: none;
+      }
+
+      .loading-text {
+        font-size: 11px;
+        color: #5c5c7c;
+        text-align: center;
+        padding: 18px;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Header -->
+    <div class="header">
+      <div class="logo">
+        <div class="logo-icon">✦</div>
+        <div class="logo-text">
+          <span class="logo-name">VisionAdapt</span>
+          <span class="logo-sub">Polymorph AI</span>
+        </div>
+      </div>
+      <label class="power-toggle" title="Enable/disable VisionAdapt">
+        <span class="power-label"><span class="status-dot" id="statusDot"></span> <span id="statusText">OFF</span></span>
+        <label class="toggle-switch">
+          <input type="checkbox" id="masterToggle" />
+          <div class="toggle-track"></div>
+          <div class="toggle-thumb"></div>
+        </label>
+      </label>
+    </div>
+
+    <!-- Site Info -->
+    <div class="site-bar">
+      <div class="site-icon">
+        <img id="siteIcon" src="" alt="" onerror="this.style.display='none'" />
+      </div>
+      <span class="site-name" id="siteName">Loading...</span>
+      <span class="site-badge ai" id="siteBadge">AI</span>
+    </div>
+
+    <!-- Main content (disabled overlay wrapper) -->
+    <div id="mainContent">
+      <!-- AI Panel -->
+      <div class="ai-panel" id="aiPanel">
+        <div class="ai-header">
+          <div class="ai-header-icon">🧠</div>
+          <div class="ai-header-text">
+            <div class="ai-title">Polymorph AI</div>
+            <div class="ai-subtitle" id="aiStatus">Analyzing page...</div>
+          </div>
+          <div class="ai-toggle-row">
+            <label class="toggle-switch">
+              <input type="checkbox" id="aiToggle" />
+              <div class="toggle-track"></div>
+              <div class="toggle-thumb"></div>
+            </label>
+          </div>
+        </div>
+        <div class="ai-reason" id="aiReason"></div>
+      </div>
+
+      <!-- Applied settings chips -->
+      <div class="applied-grid" id="appliedGrid">
+        <div class="applied-chip">
+          <span class="chip-icon">🎨</span>
+          <div class="chip-info">
+            <div class="chip-label">Mode</div>
+            <div class="chip-value" id="chipMode">None</div>
+          </div>
+        </div>
+        <div class="applied-chip">
+          <span class="chip-icon">☀️</span>
+          <div class="chip-info">
+            <div class="chip-label">Contrast</div>
+            <div class="chip-value" id="chipContrast">+0%</div>
+          </div>
+        </div>
+        <div class="applied-chip">
+          <span class="chip-icon">🔤</span>
+          <div class="chip-info">
+            <div class="chip-label">Font size</div>
+            <div class="chip-value" id="chipFont">100%</div>
+          </div>
+        </div>
+        <div class="applied-chip">
+          <span class="chip-icon">📏</span>
+          <div class="chip-info">
+            <div class="chip-label">Spacing</div>
+            <div class="chip-value" id="chipSpacing">Default</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Manual Override Controls -->
+      <div class="controls-section" id="manualControls">
+        <div class="section-title">Override</div>
+
+        <div class="control-row">
+          <span class="control-label">Vision mode</span>
+          <div class="control-input">
+            <select id="modeSelect">
+              <option value="none">None</option>
+              <option value="protanopia">Protanopia (red-blind)</option>
+              <option value="deuteranopia">Deuteranopia (green-blind)</option>
+              <option value="tritanopia">Tritanopia (blue-blind)</option>
+              <option value="achromatopsia">Achromatopsia (no color)</option>
+              <option value="low-contrast">Low contrast boost</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="control-row">
+          <span class="control-label">Contrast</span>
+          <div class="control-input">
+            <div class="range-wrap">
+              <input type="range" id="contrastRange" min="-30" max="80" step="5" value="0" />
+              <span class="range-val" id="contrastVal">+0%</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="control-row">
+          <span class="control-label">Font size</span>
+          <div class="control-input">
+            <div class="range-wrap">
+              <input type="range" id="fontRange" min="80" max="140" step="2" value="100" />
+              <span class="range-val" id="fontVal">100%</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="control-row">
+          <span class="control-label">Line height</span>
+          <div class="control-input">
+            <div class="range-wrap">
+              <input type="range" id="lineRange" min="90" max="160" step="5" value="100" />
+              <span class="range-val" id="lineVal">100%</span>
+            </div>
+          </div>
+        </div>
+
+        <label class="checkbox-row">
+          <input type="checkbox" id="readableFontCheck" />
+          <span class="checkbox-label">Use readable font (Verdana)</span>
+        </label>
+        <label class="checkbox-row">
+          <input type="checkbox" id="highReadCheck" />
+          <span class="checkbox-label">High readability (letter/word spacing)</span>
+        </label>
+        <label class="checkbox-row">
+          <input type="checkbox" id="focusCheck" />
+          <span class="checkbox-label">Enhanced focus outlines</span>
+        </label>
+        <label class="checkbox-row">
+          <input type="checkbox" id="linkCheck" />
+          <span class="checkbox-label">Always underline links</span>
+        </label>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="footer">
+      <button class="btn btn-secondary" id="resetBtn">Reset site</button>
+      <button class="btn btn-primary" id="saveBtn">Save for this site</button>
+    </div>
+
+    <script src="popup.js"></script>
+  </body>
+</html>

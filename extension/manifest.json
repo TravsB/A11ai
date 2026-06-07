@@ -1,21 +1,21 @@
 {
   "manifest_version": 3,
-  "name": "VisionAdapt",
-  "version": "3.0.0",
-  "description": "Phase 3 — Intelligent adaptive accessibility ecosystem powered by the A11y intelligence engine. Real-time color, contrast, typography, and contextual adaptations for color blindness and visual accessibility.",
+  "name": "VisionAdapt — Polymorph AI",
+  "version": "4.0.0",
+  "description": "Polymorph AI automatically analyzes every webpage and applies the best accessibility settings — color blindness filters, contrast, typography — tailored to each site.",
   "icons": {
     "16": "icons/icon16.png",
     "48": "icons/icon48.png",
     "128": "icons/icon128.png"
   },
   "action": {
-    "default_popup": "popup.html",
+    "default_popup": "popup/popup.html",
     "default_icon": {
       "16": "icons/icon16.png",
       "48": "icons/icon48.png",
       "128": "icons/icon128.png"
     },
-    "default_title": "VisionAdapt — A11y Intelligence"
+    "default_title": "VisionAdapt — Polymorph AI"
   },
   "background": {
     "service_worker": "background.js",
@@ -25,14 +25,15 @@
     {
       "matches": ["<all_urls>"],
       "js": ["content-script.js"],
-      "run_at": "document_start",
+      "run_at": "document_end",
       "all_frames": false
     }
   ],
   "permissions": [
     "storage",
     "activeTab",
-    "scripting"
+    "scripting",
+    "tabs"
   ],
   "host_permissions": [
     "<all_urls>"
