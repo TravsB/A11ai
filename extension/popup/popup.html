@@ -442,6 +442,44 @@
         text-align: center;
         padding: 18px;
       }
+
+      /* ── Sync bar ── */
+      .sync-bar {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 14px;
+        background: var(--surface);
+        border-bottom: 1px solid var(--border);
+        font-size: 11px;
+        color: var(--ink-subtle);
+      }
+      .sync-dot {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: #d4d4d4;
+        flex-shrink: 0;
+      }
+      .sync-dot.on { background: #10b981; }
+      .sync-text { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+      .sync-btn {
+        background: var(--ink);
+        color: var(--bg);
+        border: 0;
+        border-radius: 6px;
+        padding: 4px 10px;
+        font-size: 10px;
+        font-weight: 600;
+        cursor: pointer;
+        letter-spacing: 0.02em;
+      }
+      .sync-btn.ghost {
+        background: transparent;
+        color: var(--ink-subtle);
+        border: 1px solid var(--border);
+      }
+      .sync-btn:hover { opacity: 0.85; }
     </style>
   </head>
   <body>
