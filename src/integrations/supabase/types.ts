@@ -14,6 +14,90 @@ export type Database = {
   }
   public: {
     Tables: {
+      extension_global_settings: {
+        Row: {
+          created_at: string
+          enabled: boolean
+          global_override: boolean
+          global_settings: Json
+          polymorph_ai: boolean
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          enabled?: boolean
+          global_override?: boolean
+          global_settings?: Json
+          polymorph_ai?: boolean
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          enabled?: boolean
+          global_override?: boolean
+          global_settings?: Json
+          polymorph_ai?: boolean
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      extension_site_profiles: {
+        Row: {
+          ai_generated: boolean
+          ai_reason: string | null
+          contrast_boost: number
+          created_at: string
+          focus_enhance: boolean
+          font_size: number
+          high_readability: boolean
+          hostname: string
+          id: string
+          line_height: number
+          link_underline: boolean
+          mode: string
+          readable_font: boolean
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          ai_generated?: boolean
+          ai_reason?: string | null
+          contrast_boost?: number
+          created_at?: string
+          focus_enhance?: boolean
+          font_size?: number
+          high_readability?: boolean
+          hostname: string
+          id?: string
+          line_height?: number
+          link_underline?: boolean
+          mode?: string
+          readable_font?: boolean
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          ai_generated?: boolean
+          ai_reason?: string | null
+          contrast_boost?: number
+          created_at?: string
+          focus_enhance?: boolean
+          font_size?: number
+          high_readability?: boolean
+          hostname?: string
+          id?: string
+          line_height?: number
+          link_underline?: boolean
+          mode?: string
+          readable_font?: boolean
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
