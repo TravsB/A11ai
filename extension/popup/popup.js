@@ -31,9 +31,11 @@ async function init() {
     const response = await chrome.runtime.sendMessage({ type: "GET_STATE", hostname: currentHostname });
     globalState = response.global;
     siteProfile = response.siteProfile;
+    account = response.account;
   } catch (_) {
     globalState = { enabled: true, polymorphAI: true, globalOverride: false, globalSettings: {} };
     siteProfile = null;
+    account = null;
   }
 
   // Request live analysis from content script
