@@ -53,6 +53,8 @@ function renderUI(liveAnalysis) {
   const enabled = globalState?.enabled ?? true;
   const aiOn = globalState?.polymorphAI ?? true;
 
+  renderSyncBar();
+
   // Master toggle
   const masterToggle = document.getElementById("masterToggle");
   masterToggle.checked = enabled;
