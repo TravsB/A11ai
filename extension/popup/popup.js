@@ -6,6 +6,9 @@ let currentTab = null;
 let currentHostname = "";
 let globalState = null;
 let siteProfile = null;
+let account = null;
+
+const LINK_URL = "https://a11ai.lovable.app/extension-link";
 
 // ── Init ──────────────────────────────────────────────────────────────────────
 async function init() {
