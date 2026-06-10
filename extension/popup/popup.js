@@ -282,6 +282,30 @@ function bindEvents() {
     // Re-apply AI
     await chrome.runtime.sendMessage({ type: "SET_GLOBAL", settings: globalState });
   });
+
+  // Sync bar button
+  document.getElementById("syncBtn").addEventListener("click", async () => {
+    if (account?.access_token) {
+      // Already signed in → trigger a manual sync
+      const btn = document.getElementById("syncBtn");
+      const original = btn.textContent;
+      btn.textContent = "Syncing…";
+      await chrome.runtime.sendMessage({ type: "SYNC_NOW" });
+      // refresh state
+      const response = await chrome.runtime.sendMessage({ type: "GET_STATE", hostname: currentHostname });
+      globalState = response.global;
+      siteProfile = response.siteProfile;
+      account = response.account;
+      btn.textContent = "Synced!";
+      setTimeout(() => {
+        renderSyncBar();
+        renderUI(null);
+      }, 800);
+    } else {
+      // Open the linking page
+      chrome.tabs.create({ url: LINK_URL });
+    }
+  });
 }
 
 function collectSettings() {
