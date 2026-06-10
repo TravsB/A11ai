@@ -175,6 +175,23 @@ function updateStatusIndicator(enabled) {
   text.textContent = enabled ? "ON" : "OFF";
 }
 
+function renderSyncBar() {
+  const dot = document.getElementById("syncDot");
+  const text = document.getElementById("syncText");
+  const btn = document.getElementById("syncBtn");
+  if (account?.access_token) {
+    dot.className = "sync-dot on";
+    text.textContent = `Synced · ${account.email || "signed in"}`;
+    btn.textContent = "Sync now";
+    btn.className = "sync-btn ghost";
+  } else {
+    dot.className = "sync-dot";
+    text.textContent = "Settings only saved locally";
+    btn.textContent = "Sign in to sync";
+    btn.className = "sync-btn";
+  }
+}
+
 // ── Events ────────────────────────────────────────────────────────────────────
 function bindEvents() {
   // Master power
