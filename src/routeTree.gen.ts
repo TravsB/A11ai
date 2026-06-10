@@ -13,6 +13,7 @@ import { Route as StudioRouteImport } from './routes/studio'
 import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as PaletteRouteImport } from './routes/palette'
 import { Route as LoginRouteImport } from './routes/login'
+import { Route as ExtensionLinkRouteImport } from './routes/extension-link'
 import { Route as DocsRouteImport } from './routes/docs'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as IndexRouteImport } from './routes/index'
@@ -36,6 +37,11 @@ const PaletteRoute = PaletteRouteImport.update({
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
   path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ExtensionLinkRoute = ExtensionLinkRouteImport.update({
+  id: '/extension-link',
+  path: '/extension-link',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DocsRoute = DocsRouteImport.update({
@@ -63,6 +69,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/dashboard': typeof DashboardRoute
   '/docs': typeof DocsRoute
+  '/extension-link': typeof ExtensionLinkRoute
   '/login': typeof LoginRoute
   '/palette': typeof PaletteRoute
   '/profile': typeof ProfileRoute
@@ -73,6 +80,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/dashboard': typeof DashboardRoute
   '/docs': typeof DocsRoute
+  '/extension-link': typeof ExtensionLinkRoute
   '/login': typeof LoginRoute
   '/palette': typeof PaletteRoute
   '/profile': typeof ProfileRoute
@@ -84,6 +92,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/dashboard': typeof DashboardRoute
   '/docs': typeof DocsRoute
+  '/extension-link': typeof ExtensionLinkRoute
   '/login': typeof LoginRoute
   '/palette': typeof PaletteRoute
   '/profile': typeof ProfileRoute
@@ -96,6 +105,7 @@ export interface FileRouteTypes {
     | '/'
     | '/dashboard'
     | '/docs'
+    | '/extension-link'
     | '/login'
     | '/palette'
     | '/profile'
@@ -106,6 +116,7 @@ export interface FileRouteTypes {
     | '/'
     | '/dashboard'
     | '/docs'
+    | '/extension-link'
     | '/login'
     | '/palette'
     | '/profile'
@@ -116,6 +127,7 @@ export interface FileRouteTypes {
     | '/'
     | '/dashboard'
     | '/docs'
+    | '/extension-link'
     | '/login'
     | '/palette'
     | '/profile'
@@ -127,6 +139,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   DashboardRoute: typeof DashboardRoute
   DocsRoute: typeof DocsRoute
+  ExtensionLinkRoute: typeof ExtensionLinkRoute
   LoginRoute: typeof LoginRoute
   PaletteRoute: typeof PaletteRoute
   ProfileRoute: typeof ProfileRoute
@@ -164,6 +177,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LoginRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/extension-link': {
+      id: '/extension-link'
+      path: '/extension-link'
+      fullPath: '/extension-link'
+      preLoaderRoute: typeof ExtensionLinkRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/docs': {
       id: '/docs'
       path: '/docs'
@@ -199,6 +219,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   DashboardRoute: DashboardRoute,
   DocsRoute: DocsRoute,
+  ExtensionLinkRoute: ExtensionLinkRoute,
   LoginRoute: LoginRoute,
   PaletteRoute: PaletteRoute,
   ProfileRoute: ProfileRoute,
@@ -208,13 +229,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}

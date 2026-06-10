@@ -6,6 +6,9 @@ let currentTab = null;
 let currentHostname = "";
 let globalState = null;
 let siteProfile = null;
+let account = null;
+
+const LINK_URL = "https://a11ai.lovable.app/extension-link";
 
 // ── Init ──────────────────────────────────────────────────────────────────────
 async function init() {
@@ -28,9 +31,11 @@ async function init() {
     const response = await chrome.runtime.sendMessage({ type: "GET_STATE", hostname: currentHostname });
     globalState = response.global;
     siteProfile = response.siteProfile;
+    account = response.account;
   } catch (_) {
     globalState = { enabled: true, polymorphAI: true, globalOverride: false, globalSettings: {} };
     siteProfile = null;
+    account = null;
   }
 
   // Request live analysis from content script
@@ -47,6 +52,8 @@ async function init() {
 function renderUI(liveAnalysis) {
   const enabled = globalState?.enabled ?? true;
   const aiOn = globalState?.polymorphAI ?? true;
+
+  renderSyncBar();
 
   // Master toggle
   const masterToggle = document.getElementById("masterToggle");
@@ -168,6 +175,23 @@ function updateStatusIndicator(enabled) {
   text.textContent = enabled ? "ON" : "OFF";
 }
 
+function renderSyncBar() {
+  const dot = document.getElementById("syncDot");
+  const text = document.getElementById("syncText");
+  const btn = document.getElementById("syncBtn");
+  if (account?.access_token) {
+    dot.className = "sync-dot on";
+    text.textContent = `Synced · ${account.email || "signed in"}`;
+    btn.textContent = "Sync now";
+    btn.className = "sync-btn ghost";
+  } else {
+    dot.className = "sync-dot";
+    text.textContent = "Settings only saved locally";
+    btn.textContent = "Sign in to sync";
+    btn.className = "sync-btn";
+  }
+}
+
 // ── Events ────────────────────────────────────────────────────────────────────
 function bindEvents() {
   // Master power
@@ -257,6 +281,30 @@ function bindEvents() {
 
     // Re-apply AI
     await chrome.runtime.sendMessage({ type: "SET_GLOBAL", settings: globalState });
+  });
+
+  // Sync bar button
+  document.getElementById("syncBtn").addEventListener("click", async () => {
+    if (account?.access_token) {
+      // Already signed in → trigger a manual sync
+      const btn = document.getElementById("syncBtn");
+      const original = btn.textContent;
+      btn.textContent = "Syncing…";
+      await chrome.runtime.sendMessage({ type: "SYNC_NOW" });
+      // refresh state
+      const response = await chrome.runtime.sendMessage({ type: "GET_STATE", hostname: currentHostname });
+      globalState = response.global;
+      siteProfile = response.siteProfile;
+      account = response.account;
+      btn.textContent = "Synced!";
+      setTimeout(() => {
+        renderSyncBar();
+        renderUI(null);
+      }, 800);
+    } else {
+      // Open the linking page
+      chrome.tabs.create({ url: LINK_URL });
+    }
   });
 }
 
