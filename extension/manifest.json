@@ -24,6 +24,11 @@
   "content_scripts": [
     {
       "matches": ["<all_urls>"],
+      "exclude_matches": [
+        "https://a11ai.lovable.app/*",
+        "https://*.lovable.app/*",
+        "https://*.lovable.dev/*"
+      ],
       "js": ["content-script.js"],
       "run_at": "document_end",
       "all_frames": false

@@ -15,6 +15,14 @@
 
   const hostname = location.hostname;
 
+  // ─── Self-interference prevention ─────────────────────────────────────────────
+  // Exit early if running on A11ai web app domains to prevent interference
+  const EXCLUDED_DOMAINS = ["a11ai.lovable.app", "lovable.app", "lovable.dev"];
+  if (EXCLUDED_DOMAINS.some(domain => hostname === domain || hostname.endsWith("." + domain))) {
+    console.log("[VisionAdapt] Skipping excluded domain:", hostname);
+    return;
+  }
+
   // ─── SVG Color-Blindness Filters ─────────────────────────────────────────────
   const FILTER_SVG = `<svg id="${SVG_ID}" xmlns="http://www.w3.org/2000/svg" style="position:absolute;width:0;height:0;overflow:hidden;pointer-events:none;">
     <defs>
@@ -51,6 +59,9 @@
   // ─── State ───────────────────────────────────────────────────────────────────
   let currentSettings = null;
   let analysisRan = false;
+  let mutationObserver = null;
+  let analysisDebounceTimer = null;
+  let globalState = null;
 
   // ─── Inject SVG filters ──────────────────────────────────────────────────────
   function injectFilters() {
@@ -58,6 +69,66 @@
       const container = document.createElement("div");
       container.innerHTML = FILTER_SVG;
       document.body.prepend(container.firstElementChild);
+    }
+  }
+
+  // ─── MutationObserver for dynamic content ─────────────────────────────────────
+  function setupMutationObserver() {
+    if (mutationObserver) return;
+
+    mutationObserver = new MutationObserver((mutations) => {
+      // Check if significant content changes occurred
+      const hasContentChanges = mutations.some(mutation => {
+        return mutation.type === 'childList' &&
+               (mutation.addedNodes.length > 0 || mutation.removedNodes.length > 0) &&
+               Array.from(mutation.addedNodes).some(node =>
+                 node.nodeType === Node.ELEMENT_NODE &&
+                 (node.tagName === 'DIV' || node.tagName === 'P' || node.tagName === 'SPAN' ||
+                  node.tagName === 'A' || node.tagName === 'BUTTON' || node.tagName === 'H1' ||
+                  node.tagName === 'H2' || node.tagName === 'H3' || node.tagName === 'LI')
+               );
+      });
+
+      if (hasContentChanges) {
+        // Debounce re-analysis
+        if (analysisDebounceTimer) clearTimeout(analysisDebounceTimer);
+        analysisDebounceTimer = setTimeout(() => {
+          if (currentSettings && globalState?.polymorphAI) {
+            analysisRan = false; // Allow re-analysis
+            // Re-request state and re-apply
+            chrome.runtime.sendMessage({ type: "GET_STATE", hostname })
+              .then(response => {
+                if (response?.global?.enabled) {
+                  const profile = runPolymorphAI(response.global, response.siteProfile);
+                  const settings = { ...response.global.globalSettings, ...profile };
+                  applySettings(settings);
+                }
+              })
+              .catch(err => console.error("[VisionAdapt] Re-analysis error:", err));
+          }
+        }, 1000); // Wait 1 second after content changes before re-analyzing
+      }
+    });
+
+    // Start observing the document body
+    if (document.body) {
+      mutationObserver.observe(document.body, {
+        childList: true,
+        subtree: true,
+        attributes: false,
+        characterData: false
+      });
+    }
+  }
+
+  function cleanupMutationObserver() {
+    if (mutationObserver) {
+      mutationObserver.disconnect();
+      mutationObserver = null;
+    }
+    if (analysisDebounceTimer) {
+      clearTimeout(analysisDebounceTimer);
+      analysisDebounceTimer = null;
     }
   }
 
@@ -77,6 +148,12 @@
     };
 
     try {
+      // Ensure document and body exist
+      if (!document || !document.body) {
+        console.warn("[VisionAdapt] Document or body not available for analysis");
+        return results;
+      }
+
       // Sample a cross-section of visible text elements
       const selectors = "p, h1, h2, h3, h4, h5, h6, li, td, th, span, a, label, button, div";
       const elements = Array.from(document.querySelectorAll(selectors)).slice(0, 120);
@@ -84,36 +161,48 @@
       let sampled = 0;
 
       for (const el of elements) {
-        if (!el.innerText?.trim() || el.offsetParent === null) continue;
-        const style = window.getComputedStyle(el);
-        const color = parseRGBA(style.color);
-        const bg = getEffectiveBackground(el);
-        const fsize = parseFloat(style.fontSize);
+        try {
+          if (!el.innerText?.trim() || el.offsetParent === null) continue;
+          const style = window.getComputedStyle(el);
+          const color = parseRGBA(style.color);
+          const bg = getEffectiveBackground(el);
+          const fsize = parseFloat(style.fontSize);
 
-        if (!color || !bg) continue;
+          if (!color || !bg || isNaN(fsize)) continue;
 
-        const lumFg = relativeLuminance(color);
-        const lumBg = relativeLuminance(bg);
-        const contrast = contrastRatio(lumFg, lumBg);
-        const diff = Math.abs(lumFg - lumBg);
+          const lumFg = relativeLuminance(color);
+          const lumBg = relativeLuminance(bg);
+          const contrast = contrastRatio(lumFg, lumBg);
+          const diff = Math.abs(lumFg - lumBg);
 
-        lumDiffSum += diff;
-        sampled++;
+          lumDiffSum += diff;
+          sampled++;
 
-        if (contrast < 4.5) results.lowContrastAreas++;
-        if (fsize < 13) results.verySmallTextCount++;
-        else if (fsize < 16) results.smallTextCount++;
+          if (contrast < 4.5) results.lowContrastAreas++;
+          if (fsize < 13) results.verySmallTextCount++;
+          else if (fsize < 16) results.smallTextCount++;
+        } catch (elError) {
+          // Skip problematic elements but continue analysis
+          continue;
+        }
       }
 
       results.totalSampled = sampled;
       results.avgLuminanceDiff = sampled > 0 ? lumDiffSum / sampled : 0.5;
 
       // Check body background darkness
-      const bodyBg = parseRGBA(window.getComputedStyle(document.body).backgroundColor);
-      if (bodyBg) {
-        results.darkBackground = relativeLuminance(bodyBg) < 0.18;
+      try {
+        const bodyBg = parseRGBA(window.getComputedStyle(document.body).backgroundColor);
+        if (bodyBg) {
+          results.darkBackground = relativeLuminance(bodyBg) < 0.18;
+        }
+      } catch (bgError) {
+        // Use default if background detection fails
+        results.darkBackground = false;
       }
-    } catch (_) {}
+    } catch (error) {
+      console.error("[VisionAdapt] Page analysis error:", error);
+    }
 
     return results;
   }
@@ -135,36 +224,70 @@
       aiReason: "",
     };
 
+    // Handle edge case: insufficient sample data
+    if (analysis.totalSampled < 5) {
+      profile.aiReason = "Insufficient content to analyze — using default settings.";
+      return profile;
+    }
+
     const lowContrastRatio = analysis.totalSampled > 0
       ? analysis.lowContrastAreas / analysis.totalSampled
       : 0;
 
     const reasons = [];
 
-    // Contrast issues
-    if (lowContrastRatio > 0.35) {
-      profile.contrastBoost = 30;
-      reasons.push("low contrast detected on " + Math.round(lowContrastRatio * 100) + "% of text");
-    } else if (lowContrastRatio > 0.18) {
+    // Contrast issues - more nuanced thresholds
+    if (lowContrastRatio > 0.40) {
+      profile.contrastBoost = 35;
+      reasons.push("significant low contrast on " + Math.round(lowContrastRatio * 100) + "% of text");
+    } else if (lowContrastRatio > 0.25) {
+      profile.contrastBoost = 25;
+      reasons.push("low contrast on " + Math.round(lowContrastRatio * 100) + "% of text");
+    } else if (lowContrastRatio > 0.15) {
       profile.contrastBoost = 15;
       reasons.push("moderate contrast issues detected");
     }
 
-    // Very small text
-    if (analysis.verySmallTextCount > 8) {
-      profile.fontSize = 112;
+    // Dark background detection - adjust contrast strategy
+    if (analysis.darkBackground && profile.contrastBoost > 0) {
+      profile.contrastBoost = Math.min(profile.contrastBoost + 10, 50);
+      reasons.push("dark background detected");
+    }
+
+    // Very small text - adjusted thresholds based on total sampled
+    const smallTextRatio = analysis.verySmallTextCount / analysis.totalSampled;
+    if (smallTextRatio > 0.30) {
+      profile.fontSize = 115;
+      profile.readableFont = true;
+      reasons.push("very small text prevalent");
+    } else if (analysis.verySmallTextCount > 10) {
+      profile.fontSize = 110;
       profile.readableFont = true;
       reasons.push("very small text detected");
-    } else if (analysis.smallTextCount > 12) {
-      profile.fontSize = 106;
+    } else if (analysis.smallTextCount > 15) {
+      profile.fontSize = 105;
       reasons.push("small text detected");
     }
 
-    // Dense text / poor spacing
-    if (analysis.smallTextCount + analysis.verySmallTextCount > 20) {
-      profile.lineHeight = 130;
+    // Dense text / poor spacing - improved detection
+    const denseTextRatio = (analysis.smallTextCount + analysis.verySmallTextCount) / analysis.totalSampled;
+    if (denseTextRatio > 0.50) {
+      profile.lineHeight = 135;
       profile.highReadability = true;
       reasons.push("dense text layout");
+    } else if (denseTextRatio > 0.35) {
+      profile.lineHeight = 125;
+      profile.highReadability = true;
+      reasons.push("moderately dense text");
+    } else if (analysis.smallTextCount + analysis.verySmallTextCount > 20) {
+      profile.lineHeight = 120;
+      reasons.push("some dense areas");
+    }
+
+    // Low average luminance difference - general readability issue
+    if (analysis.avgLuminanceDiff < 0.30 && profile.contrastBoost === 0) {
+      profile.contrastBoost = 10;
+      reasons.push("low overall color contrast");
     }
 
     profile.aiReason = reasons.length > 0
@@ -231,10 +354,13 @@
       if (c > 1.1) filterParts.push(`brightness(${(1 + (c - 1) * 0.05).toFixed(3)})`);
     }
 
+    // Apply filter only to body to avoid breaking layout
     const filterValue = filterParts.length ? filterParts.join(" ") : "none";
-    parts.push(`html.${CLASS_ACTIVE} body { filter: ${filterValue} !important; transition: filter 250ms ease !important; }`);
+    if (filterValue !== "none") {
+      parts.push(`html.${CLASS_ACTIVE} > body { filter: ${filterValue} !important; transition: filter 250ms ease !important; }`);
+    }
 
-    // Typography
+    // Typography - more scoped to avoid breaking layout-critical elements
     const typoParts = [];
     if (settings.readableFont) {
       typoParts.push(`font-family: Verdana, 'Trebuchet MS', 'Segoe UI', system-ui, sans-serif !important;`);
@@ -249,21 +375,22 @@
       typoParts.push(`letter-spacing: 0.04em !important; word-spacing: 0.08em !important;`);
     }
     if (typoParts.length) {
-      parts.push(`html.${CLASS_ACTIVE} body, html.${CLASS_ACTIVE} p, html.${CLASS_ACTIVE} li, html.${CLASS_ACTIVE} td, html.${CLASS_ACTIVE} span, html.${CLASS_ACTIVE} div { ${typoParts.join(" ")} }`);
+      // More selective typography - exclude layout-critical elements
+      parts.push(`html.${CLASS_ACTIVE} body p, html.${CLASS_ACTIVE} body li, html.${CLASS_ACTIVE} body td, html.${CLASS_ACTIVE} body th, html.${CLASS_ACTIVE} body span:not([class*="icon"]), html.${CLASS_ACTIVE} body article, html.${CLASS_ACTIVE} body section { ${typoParts.join(" ")} }`);
     }
 
-    // Links
+    // Links - more specific to avoid affecting buttons
     if (settings.linkUnderline !== false) {
-      parts.push(`html.${CLASS_ACTIVE} a:not([role=button]):not(.btn) { text-decoration: underline !important; text-underline-offset: 2px !important; }`);
+      parts.push(`html.${CLASS_ACTIVE} body a[href]:not([role="button"]):not(.btn):not(button):not([type="button"]):not([type="submit"]) { text-decoration: underline !important; text-underline-offset: 2px !important; }`);
     }
 
-    // Focus enhancement
+    // Focus enhancement - preserve existing outline styles where possible
     if (settings.focusEnhance !== false) {
-      parts.push(`html.${CLASS_ACTIVE} :focus-visible { outline: 3px solid #f59e0b !important; outline-offset: 2px !important; border-radius: 3px !important; box-shadow: 0 0 0 5px rgba(245,158,11,0.2) !important; }`);
+      parts.push(`html.${CLASS_ACTIVE} body :focus-visible { outline: 3px solid #f59e0b !important; outline-offset: 2px !important; }`);
     }
 
-    // Invalid field highlight
-    parts.push(`html.${CLASS_ACTIVE} [aria-invalid="true"], html.${CLASS_ACTIVE} input:invalid { border-color: #dc2626 !important; box-shadow: 0 0 0 3px rgba(220,38,38,0.2) !important; }`);
+    // Invalid field highlight - more specific
+    parts.push(`html.${CLASS_ACTIVE} body [aria-invalid="true"], html.${CLASS_ACTIVE} body input:invalid, html.${CLASS_ACTIVE} body textarea:invalid, html.${CLASS_ACTIVE} body select:invalid { border-color: #dc2626 !important; box-shadow: 0 0 0 3px rgba(220,38,38,0.2) !important; }`);
 
     return parts.join("\n");
   }
@@ -284,14 +411,40 @@
     styleEl.textContent = buildCSS(settings);
 
     showBadge(settings);
+
+    // Setup mutation observer for dynamic content
+    if (globalState?.polymorphAI) {
+      setupMutationObserver();
+    }
   }
 
   function removeSettings() {
+    // Remove active class
     document.documentElement.classList.remove(CLASS_ACTIVE);
+
+    // Clear injected styles
     const styleEl = document.getElementById(STYLE_ID);
-    if (styleEl) styleEl.textContent = "";
+    if (styleEl) {
+      styleEl.textContent = "";
+      styleEl.remove();
+    }
+
+    // Remove SVG filters
+    const svgEl = document.getElementById(SVG_ID);
+    if (svgEl) svgEl.remove();
+
+    // Remove badge
     removeBadge();
+
+    // Cleanup mutation observer
+    cleanupMutationObserver();
+
+    // Reset state
     currentSettings = null;
+    globalState = null;
+    analysisRan = false;
+
+    console.log("[VisionAdapt] Settings removed and state cleaned up");
   }
 
   // ─── Status Badge ─────────────────────────────────────────────────────────────
@@ -312,33 +465,108 @@
       font-family: -apple-system, BlinkMacSystemFont, 'Inter', system-ui, sans-serif;
       font-size: 12px;
       font-weight: 600;
-      padding: 6px 12px;
+      padding: 8px 14px;
       border-radius: 20px;
       box-shadow: 0 4px 16px rgba(99,102,241,0.4);
       cursor: pointer;
       display: flex;
       align-items: center;
-      gap: 6px;
-      transition: opacity 0.3s ease;
+      gap: 8px;
+      transition: opacity 0.3s ease, transform 0.2s ease;
       pointer-events: auto;
       letter-spacing: 0.01em;
+      max-width: 300px;
     `;
-    badge.innerHTML = `<span style="font-size:14px;">✦</span> Polymorph AI`;
-    badge.title = settings.aiReason || "VisionAdapt auto-applied accessibility settings";
+    badge.innerHTML = `<span style="font-size:14px;">✦</span> <span>Polymorph AI</span> <span style="opacity:0.7; font-size:10px;">✕</span>`;
+    badge.title = settings.aiReason || "VisionAdapt auto-applied accessibility settings. Click to dismiss.";
 
-    // Auto-hide after 4s
+    // Make badge dismissible on click
+    badge.addEventListener("click", () => {
+      badge.style.opacity = "0";
+      badge.style.transform = "scale(0.9)";
+      setTimeout(() => badge.remove(), 300);
+    });
+
+    // Hover effect
+    badge.addEventListener("mouseenter", () => {
+      badge.style.transform = "scale(1.02)";
+    });
+    badge.addEventListener("mouseleave", () => {
+      badge.style.transform = "scale(1)";
+    });
+
     document.body.appendChild(badge);
+
+    // Auto-hide after 8 seconds (increased from 4s for better visibility)
+    const autoHideTimer = setTimeout(() => {
+      if (badge.parentNode) {
+        badge.style.opacity = "0";
+        badge.style.transform = "scale(0.9)";
+        setTimeout(() => badge.remove(), 300);
+      }
+    }, 8000);
+
+    // Store timer on badge element so we can clear it if manually dismissed
+    badge.dataset.timerId = autoHideTimer;
+  }
+
+  function showErrorBadge(message) {
+    removeBadge();
+    const badge = document.createElement("div");
+    badge.id = BADGE_ID;
+    badge.setAttribute("aria-label", "VisionAdapt error");
+    badge.style.cssText = `
+      position: fixed;
+      bottom: 16px;
+      right: 16px;
+      z-index: 2147483647;
+      background: linear-gradient(135deg, #dc2626, #ef4444);
+      color: white;
+      font-family: -apple-system, BlinkMacSystemFont, 'Inter', system-ui, sans-serif;
+      font-size: 12px;
+      font-weight: 600;
+      padding: 8px 14px;
+      border-radius: 20px;
+      box-shadow: 0 4px 16px rgba(220,38,38,0.4);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: opacity 0.3s ease, transform 0.2s ease;
+      pointer-events: auto;
+      letter-spacing: 0.01em;
+      max-width: 300px;
+    `;
+    badge.innerHTML = `<span style="font-size:14px;">⚠</span> <span>${message}</span> <span style="opacity:0.7; font-size:10px;">✕</span>`;
+    badge.title = "Click to dismiss";
+
+    badge.addEventListener("click", () => {
+      badge.style.opacity = "0";
+      badge.style.transform = "scale(0.9)";
+      setTimeout(() => badge.remove(), 300);
+    });
+
+    document.body.appendChild(badge);
+
+    // Auto-hide after 6 seconds for errors
     setTimeout(() => {
       if (badge.parentNode) {
         badge.style.opacity = "0";
-        setTimeout(() => badge.remove(), 350);
+        badge.style.transform = "scale(0.9)";
+        setTimeout(() => badge.remove(), 300);
       }
-    }, 4000);
+    }, 6000);
   }
 
   function removeBadge() {
     const existing = document.getElementById(BADGE_ID);
-    if (existing) existing.remove();
+    if (existing) {
+      // Clear any pending auto-hide timer
+      if (existing.dataset.timerId) {
+        clearTimeout(parseInt(existing.dataset.timerId));
+      }
+      existing.remove();
+    }
   }
 
   // ─── Main: handle message from background ────────────────────────────────────
@@ -371,6 +599,7 @@
     (async () => {
       if (message.type === "APPLY") {
         const { global, siteProfile } = message;
+        globalState = global; // Store global state for MutationObserver
 
         if (!global.enabled) {
           removeSettings();
@@ -421,11 +650,27 @@
 
   // ─── Bootstrap: request initial state on page load ───────────────────────────
   async function bootstrap() {
+    // Wait for body to be available
+    if (!document.body) {
+      if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", bootstrap, { once: true });
+      } else {
+        // Body not available even after DOM loaded - retry with delay
+        setTimeout(bootstrap, 100);
+      }
+      return;
+    }
+
     try {
       const response = await chrome.runtime.sendMessage({ type: "GET_STATE", hostname });
-      if (!response) return;
+      if (!response) {
+        console.warn("[VisionAdapt] No response from background script");
+        return;
+      }
 
       const { global, siteProfile } = response;
+      globalState = global; // Store global state for MutationObserver
+
       if (!global.enabled) return;
 
       let settings;
@@ -441,13 +686,19 @@
       }
 
       applySettings(settings);
-    } catch (_) {}
+    } catch (error) {
+      console.error("[VisionAdapt] Bootstrap error:", error);
+    }
   }
 
-  // Run bootstrap once DOM is ready
+  // Run bootstrap once DOM is ready with better detection
   if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", bootstrap);
-  } else {
+    document.addEventListener("DOMContentLoaded", bootstrap, { once: true });
+  } else if (document.body) {
+    // DOM already loaded and body exists
     bootstrap();
+  } else {
+    // DOM loaded but body not ready yet
+    setTimeout(bootstrap, 50);
   }
 })();
