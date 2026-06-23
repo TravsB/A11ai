@@ -6,6 +6,9 @@
 const STORAGE_KEY = "visionadapt_v4";
 const SITE_PROFILES_KEY = "visionadapt_site_profiles";
 const ACCOUNT_KEY = "visionadapt_account";
+const VERSION_KEY = "visionadapt_version";
+
+const EXTENSION_VERSION = "4.1.0";
 
 const SUPABASE_URL = "https://ubvjpvprtfqwxxfyvymj.supabase.co";
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVidmpwdnBydGZxd3h4Znl2eW1qIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAwNTcwMjEsImV4cCI6MjA5NTYzMzAyMX0.GXe42WVP1ruvBY6WIQ_fGcXhjo1I28MUC0pDYYQyQRs";
@@ -28,10 +31,28 @@ const DEFAULT_GLOBAL = {
 
 // ── Local storage helpers ─────────────────────────────────────────────────────
 function lget(key) {
-  return new Promise(r => chrome.storage.sync.get(key, d => r(d[key])));
+  return new Promise((resolve, reject) => {
+    chrome.storage.sync.get(key, (data) => {
+      if (chrome.runtime.lastError) {
+        console.error("[VisionAdapt] Storage get error:", chrome.runtime.lastError);
+        resolve(undefined);
+      } else {
+        resolve(data[key]);
+      }
+    });
+  });
 }
 function lset(key, value) {
-  return new Promise(r => chrome.storage.sync.set({ [key]: value }, r));
+  return new Promise((resolve, reject) => {
+    chrome.storage.sync.set({ [key]: value }, () => {
+      if (chrome.runtime.lastError) {
+        console.error("[VisionAdapt] Storage set error:", chrome.runtime.lastError);
+        reject(chrome.runtime.lastError);
+      } else {
+        resolve();
+      }
+    });
+  });
 }
 
 async function getGlobal() {
@@ -51,6 +72,38 @@ async function getSiteProfile(hostname) { return (await getSiteProfiles())[hostn
 async function getAccount() { return (await lget(ACCOUNT_KEY)) || null; }
 async function setAccount(account) { return lset(ACCOUNT_KEY, account); }
 async function clearAccount() { return lset(ACCOUNT_KEY, null); }
+
+// ── Version management ─────────────────────────────────────────────────────────
+async function getCurrentVersion() {
+  return (await lget(VERSION_KEY)) || null;
+}
+
+async function setCurrentVersion(version) {
+  return lset(VERSION_KEY, version);
+}
+
+async function checkAndMigrate() {
+  const currentVersion = await getCurrentVersion();
+  if (!currentVersion) {
+    // First install or very old version
+    console.log("[VisionAdapt] First install or migration from pre-version tracking");
+    await setCurrentVersion(EXTENSION_VERSION);
+    return;
+  }
+
+  if (currentVersion === EXTENSION_VERSION) {
+    // Already on current version
+    return;
+  }
+
+  console.log(`[VisionAdapt] Migrating from ${currentVersion} to ${EXTENSION_VERSION}`);
+
+  // Add version-specific migrations here
+  // Example: if (currentVersion < "4.1.0") { /* migration logic */ }
+
+  await setCurrentVersion(EXTENSION_VERSION);
+  console.log("[VisionAdapt] Migration complete");
+}
 
 // ── Supabase REST sync ────────────────────────────────────────────────────────
 async function sbFetch(path, options = {}) {
@@ -141,33 +194,50 @@ function rowToProfile(r) {
 
 async function pushSiteProfile(hostname, profile) {
   const acct = await getAccount();
-  if (!acct?.user_id) return;
+  if (!acct?.user_id) {
+    console.warn("[VisionAdapt] Cannot push site profile: no account");
+    return;
+  }
   try {
-    await sbFetch("/rest/v1/extension_site_profiles?on_conflict=user_id,hostname", {
+    const res = await sbFetch("/rest/v1/extension_site_profiles?on_conflict=user_id,hostname", {
       method: "POST",
       headers: { Prefer: "resolution=merge-duplicates,return=minimal" },
       body: JSON.stringify(profileToRow(hostname, profile, acct.user_id)),
     });
+    if (!res.ok) {
+      console.warn("[VisionAdapt] Push site profile failed with status:", res.status);
+    }
   } catch (e) {
-    console.warn("[VisionAdapt] push failed:", e);
+    console.error("[VisionAdapt] Push site profile error:", e);
   }
 }
 
 async function deleteRemoteSiteProfile(hostname) {
   const acct = await getAccount();
-  if (!acct?.user_id) return;
+  if (!acct?.user_id) {
+    console.warn("[VisionAdapt] Cannot delete site profile: no account");
+    return;
+  }
   try {
-    await sbFetch(`/rest/v1/extension_site_profiles?hostname=eq.${encodeURIComponent(hostname)}`, {
+    const res = await sbFetch(`/rest/v1/extension_site_profiles?hostname=eq.${encodeURIComponent(hostname)}`, {
       method: "DELETE",
     });
-  } catch (e) { console.warn("[VisionAdapt] delete failed:", e); }
+    if (!res.ok && res.status !== 404) {
+      console.warn("[VisionAdapt] Delete site profile failed with status:", res.status);
+    }
+  } catch (e) {
+    console.error("[VisionAdapt] Delete site profile error:", e);
+  }
 }
 
 async function pushGlobal(global) {
   const acct = await getAccount();
-  if (!acct?.user_id) return;
+  if (!acct?.user_id) {
+    console.warn("[VisionAdapt] Cannot push global settings: no account");
+    return;
+  }
   try {
-    await sbFetch("/rest/v1/extension_global_settings?on_conflict=user_id", {
+    const res = await sbFetch("/rest/v1/extension_global_settings?on_conflict=user_id", {
       method: "POST",
       headers: { Prefer: "resolution=merge-duplicates,return=minimal" },
       body: JSON.stringify({
@@ -178,36 +248,62 @@ async function pushGlobal(global) {
         global_settings: global.globalSettings,
       }),
     });
-  } catch (e) { console.warn("[VisionAdapt] push global failed:", e); }
+    if (!res.ok) {
+      console.warn("[VisionAdapt] Push global settings failed with status:", res.status);
+    }
+  } catch (e) {
+    console.error("[VisionAdapt] Push global settings error:", e);
+  }
 }
 
 async function pullAll() {
   const acct = await getAccount();
-  if (!acct?.user_id) return;
+  if (!acct?.user_id) {
+    console.warn("[VisionAdapt] Cannot pull settings: no account");
+    return;
+  }
   try {
     // Pull global
     const gRes = await sbFetch("/rest/v1/extension_global_settings?select=*");
     if (gRes.ok) {
-      const rows = await gRes.json();
-      if (rows[0]) {
-        const r = rows[0];
-        await setGlobal({
-          enabled: r.enabled,
-          polymorphAI: r.polymorph_ai,
-          globalOverride: r.global_override,
-          globalSettings: { ...DEFAULT_GLOBAL.globalSettings, ...(r.global_settings || {}) },
-        });
+      try {
+        const rows = await gRes.json();
+        if (rows[0]) {
+          const r = rows[0];
+          await setGlobal({
+            enabled: r.enabled,
+            polymorphAI: r.polymorph_ai,
+            globalOverride: r.global_override,
+            globalSettings: { ...DEFAULT_GLOBAL.globalSettings, ...(r.global_settings || {}) },
+          });
+        }
+      } catch (parseError) {
+        console.error("[VisionAdapt] Failed to parse global settings:", parseError);
       }
+    } else {
+      console.warn("[VisionAdapt] Pull global settings failed with status:", gRes.status);
     }
     // Pull site profiles
     const pRes = await sbFetch("/rest/v1/extension_site_profiles?select=*");
     if (pRes.ok) {
-      const rows = await pRes.json();
-      const profiles = {};
-      for (const r of rows) profiles[r.hostname] = rowToProfile(r);
-      await lset(SITE_PROFILES_KEY, profiles);
+      try {
+        const rows = await pRes.json();
+        const profiles = {};
+        for (const r of rows) {
+          if (r.hostname) {
+            profiles[r.hostname] = rowToProfile(r);
+          }
+        }
+        await lset(SITE_PROFILES_KEY, profiles);
+      } catch (parseError) {
+        console.error("[VisionAdapt] Failed to parse site profiles:", parseError);
+      }
+    } else {
+      console.warn("[VisionAdapt] Pull site profiles failed with status:", pRes.status);
     }
-  } catch (e) { console.warn("[VisionAdapt] pull failed:", e); }
+  } catch (e) {
+    console.error("[VisionAdapt] Pull settings error:", e);
+  }
 }
 
 // ── Tab application ──────────────────────────────────────────────────────────
@@ -241,6 +337,18 @@ async function maybePull() {
   lastPull = now;
   await pullAll();
 }
+
+// ── Initialization ─────────────────────────────────────────────────────────────
+async function initialize() {
+  try {
+    await checkAndMigrate();
+  } catch (error) {
+    console.error("[VisionAdapt] Initialization error:", error);
+  }
+}
+
+// Run initialization on service worker startup
+initialize();
 
 // ── Messages ─────────────────────────────────────────────────────────────────
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
