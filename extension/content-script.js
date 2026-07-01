@@ -65,12 +65,62 @@
 
   // ─── Inject SVG filters ──────────────────────────────────────────────────────
   function injectFilters() {
-    if (!document.getElementById(SVG_ID)) {
-      const container = document.createElement("div");
-      container.innerHTML = FILTER_SVG;
-      document.body.prepend(container.firstElementChild);
-    }
+    if (document.getElementById(SVG_ID)) return;
+    const container = document.createElement("div");
+    container.innerHTML = FILTER_SVG;
+    const node = container.firstElementChild;
+    const parent = document.body || document.documentElement;
+    if (parent) parent.appendChild(node);
   }
+
+  // ─── SPA navigation detection ────────────────────────────────────────────────
+  let lastUrl = location.href;
+  function onUrlChange() {
+    if (location.href === lastUrl) return;
+    lastUrl = location.href;
+    // New "page" in an SPA — re-run analysis and re-apply
+    analysisRan = false;
+    setTimeout(() => {
+      chrome.runtime.sendMessage({ type: "GET_STATE", hostname: location.hostname })
+        .then((response) => {
+          if (!response?.global?.enabled) return;
+          const g = response.global;
+          let settings;
+          if (g.globalOverride) settings = { ...g.globalSettings, aiGenerated: false };
+          else if (g.polymorphAI) {
+            const profile = runPolymorphAISync(g, response.siteProfile);
+            settings = { ...g.globalSettings, ...profile };
+          } else {
+            settings = response.siteProfile
+              ? { ...g.globalSettings, ...response.siteProfile }
+              : { ...g.globalSettings };
+          }
+          applySettings(settings);
+        })
+        .catch(() => {});
+    }, 400); // let the SPA render new content first
+  }
+
+  function runPolymorphAISync(global, existingProfile) {
+    if (!global.polymorphAI) return existingProfile || {};
+    if (existingProfile) return existingProfile;
+    const analysis = analyzePageContrast();
+    const profile = deriveRecommendedProfile(analysis);
+    try {
+      chrome.runtime.sendMessage({ type: "AI_ANALYSIS_DONE", hostname: location.hostname, profile });
+    } catch (_) {}
+    return profile;
+  }
+
+  function hookHistory() {
+    const push = history.pushState;
+    const replace = history.replaceState;
+    history.pushState = function () { const r = push.apply(this, arguments); onUrlChange(); return r; };
+    history.replaceState = function () { const r = replace.apply(this, arguments); onUrlChange(); return r; };
+    window.addEventListener("popstate", onUrlChange);
+    window.addEventListener("hashchange", onUrlChange);
+  }
+
 
   // ─── MutationObserver for dynamic content ─────────────────────────────────────
   function setupMutationObserver() {
