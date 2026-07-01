@@ -7,6 +7,7 @@ const nav = [
   { to: "/studio", label: "Live Studio" },
   { to: "/dashboard", label: "Dashboard" },
   { to: "/palette", label: "Palette" },
+  { to: "/guide", label: "Guide" },
   { to: "/docs", label: "Developers" },
 ];
 
