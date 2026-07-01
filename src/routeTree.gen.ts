@@ -13,6 +13,7 @@ import { Route as StudioRouteImport } from './routes/studio'
 import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as PaletteRouteImport } from './routes/palette'
 import { Route as LoginRouteImport } from './routes/login'
+import { Route as GuideRouteImport } from './routes/guide'
 import { Route as ExtensionLinkRouteImport } from './routes/extension-link'
 import { Route as DocsRouteImport } from './routes/docs'
 import { Route as DashboardRouteImport } from './routes/dashboard'
@@ -37,6 +38,11 @@ const PaletteRoute = PaletteRouteImport.update({
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
   path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const GuideRoute = GuideRouteImport.update({
+  id: '/guide',
+  path: '/guide',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ExtensionLinkRoute = ExtensionLinkRouteImport.update({
@@ -70,6 +76,7 @@ export interface FileRoutesByFullPath {
   '/dashboard': typeof DashboardRoute
   '/docs': typeof DocsRoute
   '/extension-link': typeof ExtensionLinkRoute
+  '/guide': typeof GuideRoute
   '/login': typeof LoginRoute
   '/palette': typeof PaletteRoute
   '/profile': typeof ProfileRoute
@@ -81,6 +88,7 @@ export interface FileRoutesByTo {
   '/dashboard': typeof DashboardRoute
   '/docs': typeof DocsRoute
   '/extension-link': typeof ExtensionLinkRoute
+  '/guide': typeof GuideRoute
   '/login': typeof LoginRoute
   '/palette': typeof PaletteRoute
   '/profile': typeof ProfileRoute
@@ -93,6 +101,7 @@ export interface FileRoutesById {
   '/dashboard': typeof DashboardRoute
   '/docs': typeof DocsRoute
   '/extension-link': typeof ExtensionLinkRoute
+  '/guide': typeof GuideRoute
   '/login': typeof LoginRoute
   '/palette': typeof PaletteRoute
   '/profile': typeof ProfileRoute
@@ -106,6 +115,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/docs'
     | '/extension-link'
+    | '/guide'
     | '/login'
     | '/palette'
     | '/profile'
@@ -117,6 +127,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/docs'
     | '/extension-link'
+    | '/guide'
     | '/login'
     | '/palette'
     | '/profile'
@@ -128,6 +139,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/docs'
     | '/extension-link'
+    | '/guide'
     | '/login'
     | '/palette'
     | '/profile'
@@ -140,6 +152,7 @@ export interface RootRouteChildren {
   DashboardRoute: typeof DashboardRoute
   DocsRoute: typeof DocsRoute
   ExtensionLinkRoute: typeof ExtensionLinkRoute
+  GuideRoute: typeof GuideRoute
   LoginRoute: typeof LoginRoute
   PaletteRoute: typeof PaletteRoute
   ProfileRoute: typeof ProfileRoute
@@ -175,6 +188,13 @@ declare module '@tanstack/react-router' {
       path: '/login'
       fullPath: '/login'
       preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/guide': {
+      id: '/guide'
+      path: '/guide'
+      fullPath: '/guide'
+      preLoaderRoute: typeof GuideRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/extension-link': {
@@ -220,6 +240,7 @@ const rootRouteChildren: RootRouteChildren = {
   DashboardRoute: DashboardRoute,
   DocsRoute: DocsRoute,
   ExtensionLinkRoute: ExtensionLinkRoute,
+  GuideRoute: GuideRoute,
   LoginRoute: LoginRoute,
   PaletteRoute: PaletteRoute,
   ProfileRoute: ProfileRoute,
