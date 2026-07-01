@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "VisionAdapt — Polymorph AI",
-  "version": "4.1.0",
+  "version": "4.2.0",
   "description": "Polymorph AI automatically analyzes every webpage and applies the best accessibility settings — color blindness filters, contrast, typography — synced across devices.",
   "icons": {
     "16": "icons/icon16.png",
@@ -30,8 +30,9 @@
         "https://*.lovable.dev/*"
       ],
       "js": ["content-script.js"],
-      "run_at": "document_end",
-      "all_frames": false
+      "run_at": "document_start",
+      "all_frames": true,
+      "match_about_blank": true
     },
     {
       "matches": [
@@ -48,7 +49,8 @@
     "storage",
     "activeTab",
     "scripting",
-    "tabs"
+    "tabs",
+    "webNavigation"
   ],
   "host_permissions": [
     "<all_urls>"
