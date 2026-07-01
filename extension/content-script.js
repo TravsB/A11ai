@@ -694,32 +694,37 @@
         analysisRan = false;
         sendResponse({ ok: true });
       }
+
+      else if (message.type === "REAPPLY") {
+        // Background asks us to re-run (SPA nav detected server-side)
+        analysisRan = false;
+        onUrlChange();
+        sendResponse({ ok: true });
+      }
     })();
     return true;
   });
 
   // ─── Bootstrap: request initial state on page load ───────────────────────────
   async function bootstrap() {
-    // Wait for body to be available
+    // Wait for body to be available (we run at document_start now)
     if (!document.body) {
       if (document.readyState === "loading") {
         document.addEventListener("DOMContentLoaded", bootstrap, { once: true });
       } else {
-        // Body not available even after DOM loaded - retry with delay
-        setTimeout(bootstrap, 100);
+        setTimeout(bootstrap, 50);
       }
       return;
     }
 
+    hookHistory();
+
     try {
       const response = await chrome.runtime.sendMessage({ type: "GET_STATE", hostname });
-      if (!response) {
-        console.warn("[VisionAdapt] No response from background script");
-        return;
-      }
+      if (!response) return;
 
       const { global, siteProfile } = response;
-      globalState = global; // Store global state for MutationObserver
+      globalState = global;
 
       if (!global.enabled) return;
 
@@ -741,14 +746,10 @@
     }
   }
 
-  // Run bootstrap once DOM is ready with better detection
   if (document.readyState === "loading") {
     document.addEventListener("DOMContentLoaded", bootstrap, { once: true });
-  } else if (document.body) {
-    // DOM already loaded and body exists
-    bootstrap();
   } else {
-    // DOM loaded but body not ready yet
-    setTimeout(bootstrap, 50);
+    bootstrap();
   }
 })();
+
