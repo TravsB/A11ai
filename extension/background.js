@@ -329,6 +329,18 @@ chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
   }
 });
 
+// SPA navigation: many sites (YouTube, Gmail, X, Facebook, GitHub) change URL
+// without a full reload. Re-apply on history state updates so the extension
+// keeps working across in-app navigation.
+if (chrome.webNavigation && chrome.webNavigation.onHistoryStateUpdated) {
+  chrome.webNavigation.onHistoryStateUpdated.addListener(async (details) => {
+    if (details.frameId !== 0) return; // top frame only
+    if (!details.url || !details.url.startsWith("http")) return;
+    await applyToTab(details.tabId, details.url);
+    try { await chrome.tabs.sendMessage(details.tabId, { type: "REAPPLY" }); } catch (_) {}
+  });
+}
+
 // Pull from cloud whenever the worker wakes (debounced via last-pull timestamp)
 let lastPull = 0;
 async function maybePull() {
