@@ -10,6 +10,7 @@
     "setup-pnpm": "node -e \"try{require('child_process').execSync('corepack enable && corepack prepare pnpm@latest --activate',{stdio:'inherit'})}catch(e){console.error('corepack not available — run `npm i -g pnpm` or use your OS package manager', e)}\""
   },
   "private": true,
+  "packageManager": "pnpm@9.15.0",
   "devDependencies": {
     "prettier": "^3.8.3",
     "typescript": "~5.9.3",
