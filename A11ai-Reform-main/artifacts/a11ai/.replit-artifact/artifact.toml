@@ -1,0 +1,31 @@
+kind = "web"
+previewPath = "/"
+title = "A11ai"
+version = "1.0.0"
+id = "artifacts/a11ai"
+router = "path"
+
+[[integratedSkills]]
+name = "react-vite"
+version = "1.0.0"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 18958
+
+[services.development]
+run = "pnpm --filter @workspace/a11ai run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/a11ai", "run", "build" ]
+publicDir = "artifacts/a11ai/dist/public"
+serve = "static"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "18958"
+BASE_PATH = "/"
