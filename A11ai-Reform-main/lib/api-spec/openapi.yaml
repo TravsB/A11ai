@@ -1,15 +1,27 @@
 openapi: 3.1.0
 info:
-  # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: Comprehensive A11ai Accessibility Platform API specification
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
-    description: Health operations
+    description: System health check
+  - name: auth
+    description: User authentication and session management
+  - name: scans
+    description: Accessibility scan management
+  - name: audits
+    description: Multi-page site accessibility crawling and auditing
+  - name: keys
+    description: Developer API key management
+  - name: preferences
+    description: User accessibility settings and vision profile preferences
+  - name: public
+    description: Public scan reports and proxy services
+
 paths:
   /healthz:
     get:
@@ -24,6 +36,310 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  /auth/register:
+    post:
+      operationId: registerUser
+      tags: [auth]
+      summary: Register account
+      description: Creates a new user account and sets session cookie
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RegisterRequest"
+      responses:
+        "201":
+          description: Account created successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserResponse"
+        "400":
+          description: Missing or invalid registration parameters
+        "409":
+          description: Account with email already exists
+
+  /auth/login:
+    post:
+      operationId: loginUser
+      tags: [auth]
+      summary: User login
+      description: Authenticates user credentials and sets session cookie
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginRequest"
+      responses:
+        "200":
+          description: Authenticated successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserResponse"
+        "401":
+          description: Invalid email or password
+
+  /auth/logout:
+    post:
+      operationId: logoutUser
+      tags: [auth]
+      summary: User logout
+      description: Clears authentication session cookie
+      responses:
+        "200":
+          description: Logged out
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OkResponse"
+
+  /auth/me:
+    get:
+      operationId: getCurrentUser
+      tags: [auth]
+      summary: Get session user
+      description: Returns currently authenticated user context
+      responses:
+        "200":
+          description: Current user metadata
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserResponse"
+        "401":
+          description: Not authenticated
+
+  /scans:
+    get:
+      operationId: listScans
+      tags: [scans]
+      summary: List recent scans
+      description: Returns recent accessibility scans for current user
+      responses:
+        "200":
+          description: List of scans
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ScansListResponse"
+    post:
+      operationId: createScan
+      tags: [scans]
+      summary: Run single page scan
+      description: Triggers accessibility scan for specified target URL
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateScanRequest"
+      responses:
+        "201":
+          description: Scan completed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ScanDetailResponse"
+        "400":
+          description: Invalid URL
+        "422":
+          description: Scan execution failed
+
+  /scans/{id}:
+    get:
+      operationId: getScanById
+      tags: [scans]
+      summary: Get scan detail
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Scan details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ScanDetailResponse"
+        "404":
+          description: Scan not found
+    delete:
+      operationId: deleteScanById
+      tags: [scans]
+      summary: Delete scan
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OkResponse"
+        "404":
+          description: Scan not found
+
+  /audits:
+    get:
+      operationId: listAudits
+      tags: [audits]
+      summary: List site audits
+      responses:
+        "200":
+          description: List of site audits
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuditsListResponse"
+
+  /audits/{id}:
+    get:
+      operationId: getAuditById
+      tags: [audits]
+      summary: Get audit details and pages
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Audit details with crawled page issues
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuditDetailResponse"
+        "404":
+          description: Audit not found
+    delete:
+      operationId: deleteAuditById
+      tags: [audits]
+      summary: Delete site audit
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OkResponse"
+
+  /keys:
+    get:
+      operationId: listApiKeys
+      tags: [keys]
+      summary: List developer API keys
+      responses:
+        "200":
+          description: List of API keys
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiKeysListResponse"
+    post:
+      operationId: createApiKey
+      tags: [keys]
+      summary: Create new API key
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateApiKeyRequest"
+      responses:
+        "201":
+          description: Created key record and unhashed full key
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CreateApiKeyResponse"
+
+  /keys/{id}:
+    delete:
+      operationId: deleteApiKeyById
+      tags: [keys]
+      summary: Delete API key
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OkResponse"
+
+  /preferences:
+    get:
+      operationId: getPreferences
+      tags: [preferences]
+      summary: Get user preferences
+      responses:
+        "200":
+          description: User vision preferences
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PreferencesResponse"
+    post:
+      operationId: updatePreferences
+      tags: [preferences]
+      summary: Save user preferences
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdatePreferencesRequest"
+      responses:
+        "200":
+          description: Saved preferences
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PreferencesResponse"
+
+  /public/report/{id}:
+    get:
+      operationId: getPublicReport
+      tags: [public]
+      summary: Public scan report lookup
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Public report details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ScanDetailResponse"
+        "404":
+          description: Report not found
+
 components:
   schemas:
     HealthStatus:
@@ -34,3 +350,307 @@ components:
       required:
         - status
 
+    OkResponse:
+      type: object
+      properties:
+        ok:
+          type: boolean
+      required:
+        - ok
+
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        email:
+          type: string
+      required:
+        - id
+        - name
+        - email
+
+    UserResponse:
+      type: object
+      properties:
+        user:
+          $ref: "#/components/schemas/User"
+      required:
+        - user
+
+    RegisterRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        email:
+          type: string
+        password:
+          type: string
+      required:
+        - name
+        - email
+        - password
+
+    LoginRequest:
+      type: object
+      properties:
+        email:
+          type: string
+        password:
+          type: string
+      required:
+        - email
+        - password
+
+    ScanIssue:
+      type: object
+      properties:
+        id:
+          type: string
+        severity:
+          type: string
+          enum: [critical, high, medium, low]
+        wcag:
+          type: string
+        title:
+          type: string
+        description:
+          type: string
+        count:
+          type: integer
+        remediation:
+          type: string
+        elementSnippet:
+          type: string
+      required:
+        - id
+        - severity
+        - wcag
+        - title
+        - description
+        - count
+
+    Scan:
+      type: object
+      properties:
+        id:
+          type: string
+        userId:
+          type: string
+        url:
+          type: string
+        score:
+          type: integer
+        issueCount:
+          type: integer
+        createdAt:
+          type: string
+        result:
+          type: object
+          properties:
+            issues:
+              type: array
+              items:
+                $ref: "#/components/schemas/ScanIssue"
+          required:
+            - issues
+      required:
+        - id
+        - url
+        - score
+        - issueCount
+        - createdAt
+
+    CreateScanRequest:
+      type: object
+      properties:
+        url:
+          type: string
+      required:
+        - url
+
+    ScanDetailResponse:
+      type: object
+      properties:
+        scan:
+          $ref: "#/components/schemas/Scan"
+      required:
+        - scan
+
+    ScansListResponse:
+      type: object
+      properties:
+        scans:
+          type: array
+          items:
+            $ref: "#/components/schemas/Scan"
+      required:
+        - scans
+
+    Audit:
+      type: object
+      properties:
+        id:
+          type: string
+        userId:
+          type: string
+        domain:
+          type: string
+        status:
+          type: string
+        totalPages:
+          type: integer
+        avgScore:
+          type: integer
+        criticalCount:
+          type: integer
+        errorMessage:
+          type: string
+        createdAt:
+          type: string
+      required:
+        - id
+        - domain
+        - status
+        - totalPages
+        - criticalCount
+        - createdAt
+
+    AuditPage:
+      type: object
+      properties:
+        id:
+          type: string
+        auditId:
+          type: string
+        url:
+          type: string
+        score:
+          type: integer
+        issueCount:
+          type: integer
+        result:
+          type: object
+          properties:
+            issues:
+              type: array
+              items:
+                $ref: "#/components/schemas/ScanIssue"
+      required:
+        - id
+        - auditId
+        - url
+        - score
+        - issueCount
+
+    AuditsListResponse:
+      type: object
+      properties:
+        audits:
+          type: array
+          items:
+            $ref: "#/components/schemas/Audit"
+      required:
+        - audits
+
+    AuditDetailResponse:
+      type: object
+      properties:
+        audit:
+          $ref: "#/components/schemas/Audit"
+        pages:
+          type: array
+          items:
+            $ref: "#/components/schemas/AuditPage"
+      required:
+        - audit
+        - pages
+
+    ApiKeyRecord:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        keyPrefix:
+          type: string
+        createdAt:
+          type: string
+        lastUsedAt:
+          type: string
+      required:
+        - id
+        - name
+        - keyPrefix
+        - createdAt
+
+    ApiKeysListResponse:
+      type: object
+      properties:
+        keys:
+          type: array
+          items:
+            $ref: "#/components/schemas/ApiKeyRecord"
+      required:
+        - keys
+
+    CreateApiKeyRequest:
+      type: object
+      properties:
+        name:
+          type: string
+      required:
+        - name
+
+    CreateApiKeyResponse:
+      type: object
+      properties:
+        key:
+          $ref: "#/components/schemas/ApiKeyRecord"
+        fullKey:
+          type: string
+      required:
+        - key
+        - fullKey
+
+    Preferences:
+      type: object
+      properties:
+        contrast:
+          type: integer
+        fontScale:
+          type: integer
+        linkHighlight:
+          type: boolean
+        dyslexiaFont:
+          type: boolean
+        daltonize:
+          type: boolean
+        visionMode:
+          type: string
+
+    PreferencesResponse:
+      type: object
+      properties:
+        preferences:
+          $ref: "#/components/schemas/Preferences"
+
+    UpdatePreferencesRequest:
+      type: object
+      properties:
+        contrast:
+          type: integer
+        fontScale:
+          type: integer
+        linkHighlight:
+          type: boolean
+        dyslexiaFont:
+          type: boolean
+        daltonize:
+          type: boolean
+        visionMode:
+          type: string

@@ -1,7 +1,12 @@
 import { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
 
-const JWT_SECRET = process.env.SESSION_SECRET ?? "dev-secret-change-me";
+const JWT_SECRET = process.env.SESSION_SECRET;
+
+if (!JWT_SECRET) {
+  throw new Error("SESSION_SECRET must be set in the environment before starting the API server.");
+}
+
 const COOKIE_NAME = "a11ai_token";
 
 export interface AuthenticatedRequest extends Request {

@@ -21,6 +21,8 @@ interface ScanIssue {
   title: string;
   description: string;
   count: number;
+  remediation?: string;
+  elementSnippet?: string;
 }
 
 interface ScanSummary {
@@ -507,31 +509,41 @@ export default function Dashboard() {
               </div>
               <div className="divide-y divide-border">
                 {selected.result.issues.map((issue) => (
-                  <div key={issue.id} className="flex items-start gap-4 px-6 py-4">
-                    <span
-                      className={`mt-1 h-2 w-2 shrink-0 rounded-full ${SEVERITY_STYLES[issue.severity].dot}`}
-                    />
-                    <div className="flex-1">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <span className="text-sm font-semibold text-ink">
-                          {issue.title}
-                        </span>
-                        <span
-                          className={`rounded-full border px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide ${SEVERITY_STYLES[issue.severity].badge}`}
-                        >
-                          {issue.severity}
-                        </span>
-                        <span className="text-[10px] text-muted-foreground">
-                          WCAG {issue.wcag}
-                        </span>
+                  <div key={issue.id} className="flex flex-col gap-2.5 px-6 py-4">
+                    <div className="flex items-start gap-4">
+                      <span
+                        className={`mt-1 h-2 w-2 shrink-0 rounded-full ${SEVERITY_STYLES[issue.severity].dot}`}
+                      />
+                      <div className="flex-1">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <span className="text-sm font-semibold text-ink">
+                            {issue.title}
+                          </span>
+                          <span
+                            className={`rounded-full border px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide ${SEVERITY_STYLES[issue.severity].badge}`}
+                          >
+                            {issue.severity}
+                          </span>
+                          <span className="text-[10px] text-muted-foreground">
+                            WCAG {issue.wcag}
+                          </span>
+                        </div>
+                        <p className="mt-1 text-sm text-muted-foreground leading-relaxed">
+                          {issue.description}
+                        </p>
                       </div>
-                      <p className="mt-1 text-sm text-muted-foreground leading-relaxed">
-                        {issue.description}
-                      </p>
+                      <span className="shrink-0 text-xs text-muted-foreground">
+                        ×{issue.count}
+                      </span>
                     </div>
-                    <span className="shrink-0 text-xs text-muted-foreground">
-                      ×{issue.count}
-                    </span>
+                    {issue.remediation && (
+                      <div className="ml-6 rounded-lg border border-border/60 bg-muted/40 p-3 text-xs">
+                        <div className="font-medium text-ink mb-1">💡 Recommended Fix:</div>
+                        <code className="block text-[11px] font-mono text-ink/90 bg-background/80 p-2 rounded border border-border/40 overflow-x-auto">
+                          {issue.remediation}
+                        </code>
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>

@@ -10,6 +10,9 @@ export function validateScanUrl(rawUrl: string): { valid: boolean; url?: URL; er
   }
 
   let formatted = rawUrl.trim();
+  if (formatted.includes("://") && !/^https?:\/\//i.test(formatted)) {
+    return { valid: false, error: "Only http and https protocols are allowed." };
+  }
   if (!/^https?:\/\//i.test(formatted)) {
     formatted = `https://${formatted}`;
   }
