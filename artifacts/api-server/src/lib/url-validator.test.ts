@@ -51,4 +51,17 @@ describe("URL Validator & SSRF Protection", () => {
     assert.equal(res.valid, false);
     assert.match(res.error || "", /http and https/i);
   });
+
+  test("blocks IPv6 loopback and IPv4-mapped private addresses", () => {
+    const v1 = validateScanUrl("http://[::1]:8080");
+    assert.equal(v1.valid, false);
+    assert.match(v1.error || "", /private or loopback/i);
+
+    const v2 = validateScanUrl("http://[::ffff:192.168.1.1]");
+    assert.equal(v2.valid, false);
+    assert.match(v2.error || "", /private or loopback/i);
+
+    const v3 = validateScanUrl("http://[::ffff:8.8.8.8]");
+    assert.equal(v3.valid, true);
+  });
 });
