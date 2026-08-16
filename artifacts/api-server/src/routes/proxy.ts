@@ -38,16 +38,24 @@ router.get("/public/proxy", async (req, res) => {
     let html = await upstream.text();
     const base = url.toString();
 
-    html = html.replace(/<head([^>]*)>/i, (m) => {
-      return `${m}<base href="${base}"><script>
-(function(){
+    try {
+      const cheerio = await import('cheerio');
+      const $ = cheerio.load(html);
+
+      if ($('head').length === 0) {
+        $('html').prepend('<head></head>');
+      }
+
+      $('head').prepend(`<base href="${base}">`);
+
+      const script = `(function(){
   function ensureFilters(){
     if(document.getElementById('__a11ai_filters')) return;
     var svg = document.createElement('svg');
     svg.setAttribute('aria-hidden','true');
     svg.setAttribute('focusable','false');
     svg.style.position='absolute'; svg.style.width='0'; svg.style.height='0'; svg.id='__a11ai_filters';
-    svg.innerHTML = `\n      <defs>\n        <filter id="a11ai-filter-protanopia">\n          <feColorMatrix type="matrix" values="0.567 0.433 0 0 0 0.558 0.442 0 0 0 0 0.242 0.758 0 0 0 0 0 1 0"/>\n        </filter>\n        <filter id="a11ai-filter-deuteranopia">\n          <feColorMatrix type="matrix" values="0.625 0.375 0 0 0 0.7 0.3 0 0 0 0 0.3 0.7 0 0 0 0 0 1 0"/>\n        </filter>\n        <filter id="a11ai-filter-tritanopia">\n          <feColorMatrix type="matrix" values="0.95 0.05 0 0 0 0 0.433 0.567 0 0 0 0.475 0.525 0 0 0 0 0 1 0"/>\n        </filter>\n      </defs>`;
+    svg.innerHTML = '\n      <defs>\n        <filter id="a11ai-filter-protanopia">\n          <feColorMatrix type="matrix" values="0.567 0.433 0 0 0 0.558 0.442 0 0 0 0 0.242 0.758 0 0 0 0 0 1 0"/>\n        </filter>\n        <filter id="a11ai-filter-deuteranopia">\n          <feColorMatrix type="matrix" values="0.625 0.375 0 0 0 0.7 0.3 0 0 0 0 0.3 0.7 0 0 0 0 0 1 0"/>\n        </filter>\n        <filter id="a11ai-filter-tritanopia">\n          <feColorMatrix type="matrix" values="0.95 0.05 0 0 0 0 0.433 0.567 0 0 0 0.475 0.525 0 0 0 0 0 1 0"/>\n        </filter>\n      </defs>';
     document.head.appendChild(svg);
   }
 
@@ -60,7 +68,6 @@ router.get("/public/proxy", async (req, res) => {
     var cfg = e.data.config || {};
     var root = document.documentElement;
 
-    // Handle vision mode filters
     var mode = cfg.mode || cfg.visionMode || 'normal';
     var modeFilter = '';
     if(mode && mode !== 'normal' && mode !== 'none'){
@@ -70,29 +77,24 @@ router.get("/public/proxy", async (req, res) => {
       } else if(mode === 'low-contrast' || mode === 'lowvision'){
         modeFilter = 'contrast(150%) brightness(1.05)';
       } else {
-        // protanopia, deuteranopia, tritanopia -> use svg filter URL
         modeFilter = 'url(#a11ai-filter-' + mode + ')';
       }
     }
 
-    // Contrast
     var contrastFilter = '';
     if(cfg.contrast && Number(cfg.contrast) !== 100){
       contrastFilter = 'contrast(' + (Number(cfg.contrast)/100) + ')';
     }
 
-    // Apply combined filter (mode filter + contrast)
     var filters = [modeFilter, contrastFilter].filter(Boolean).join(' ');
     try{ root.style.filter = filters; }catch(e){}
 
-    // Font scaling
     if(cfg.fontScale && Number(cfg.fontScale) !== 100){
       try{ root.style.fontSize = Number(cfg.fontScale) + '%'; }catch(e){}
     } else {
       try{ root.style.fontSize = ''; }catch(e){}
     }
 
-    // Dyslexia font (inject style with !important to increase chance of taking effect)
     var DY_STYLE_ID = '__a11ai_dyslexia';
     if(cfg.dyslexia){
       if(!document.getElementById(DY_STYLE_ID)){
@@ -104,7 +106,6 @@ router.get("/public/proxy", async (req, res) => {
       var sv = document.getElementById(DY_STYLE_ID); if(sv) sv.remove();
     }
 
-    // Link highlighting
     if(cfg.link){
       if(!document.getElementById('__va_links')){
         var s2 = document.createElement('style');
@@ -115,11 +116,16 @@ router.get("/public/proxy", async (req, res) => {
     } else {
       var s3 = document.getElementById('__va_links'); if(s3) s3.remove();
     }
-
   });
-})();
-</script>`;
-    });
+})();`;
+
+      $('head').append(`<script>${script}<\/script>`);
+      html = $.html();
+    } catch (e) {
+      html = html.replace(/<head([^>]*)>/i, (m) => {
+        return `${m}<base href="${base}"><script>(/* Cheerio failed, relay on fallback */)<\/script>`;
+      });
+    }
 
     res.setHeader("Content-Type", "text/html; charset=utf-8");
     res.setHeader("X-Frame-Options", "ALLOWALL");
@@ -128,7 +134,7 @@ router.get("/public/proxy", async (req, res) => {
   } catch (err) {
     logger.warn({ err, url: url.toString() }, "Proxy fetch failed");
     res.status(502).send(`<!DOCTYPE html><html><head><base href="${url.toString()}">
-<script>window.parent.postMessage({__va:"ready"},"*");</script>
+<script>window.parent.postMessage({__va:"ready"},"*");<\/script>
 </head><body style="font-family:system-ui;padding:2rem;color:#374151">
 <h2 style="margin:0 0 .5rem">Could not load page</h2>
 <p style="color:#6b7280;margin:0">The server could not fetch <code>${url.toString()}</code>.<br>
