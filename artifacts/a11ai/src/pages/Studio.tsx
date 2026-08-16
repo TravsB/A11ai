@@ -51,7 +51,7 @@ export default function Studio() {
 
   useEffect(() => {
     function onMessage(e: MessageEvent) {
-      if (e.origin !== window.location.origin) return;
+      // Accept messages only from the preview iframe window and that match the expected protocol
       if (e.source !== iframeRef.current?.contentWindow) return;
       const data = e.data as { __va?: string; url?: string };
       if (!data || !data.__va) return;
