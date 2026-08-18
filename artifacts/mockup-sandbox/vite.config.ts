@@ -1,30 +1,26 @@
-import { defineConfig } from "vite";
+﻿import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import tailwindcss from "@tailwindcss/vite";
 import path from "path";
 import runtimeErrorOverlay from "@replit/vite-plugin-runtime-error-modal";
 import { mockupPreviewPlugin } from "./mockupPreviewPlugin";
 
-const rawPort = process.env.PORT;
+const rawPort = process.env.PORT ?? process.env.MOCKUP_PORT ?? process.env.VITE_PORT;
 
-if (!rawPort) {
-  throw new Error(
-    "PORT environment variable is required but was not provided.",
-  );
+let port = 4173;
+if (rawPort) {
+  const parsed = Number(rawPort);
+  if (Number.isNaN(parsed) || parsed <= 0) {
+    throw new Error(`Invalid PORT value: "${rawPort}"`);
+  }
+  port = parsed;
+} else {
+  console.warn("PORT not provided — using default 4173 for mockup sandbox.");
 }
 
-const port = Number(rawPort);
-
-if (Number.isNaN(port) || port <= 0) {
-  throw new Error(`Invalid PORT value: "${rawPort}"`);
-}
-
-const basePath = process.env.BASE_PATH;
-
+const basePath = process.env.BASE_PATH ?? "/";
 if (!basePath) {
-  throw new Error(
-    "BASE_PATH environment variable is required but was not provided.",
-  );
+  console.warn("BASE_PATH is empty — using '/' as the base path.");
 }
 
 export default defineConfig({
