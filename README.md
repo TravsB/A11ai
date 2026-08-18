@@ -1,4 +1,4 @@
-# A11ai — AI-Assisted Accessibility Audit & Remediation Platform
+﻿# A11ai — AI-Assisted Accessibility Audit & Remediation Platform
 
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.9-blue.svg)](https://www.typescriptlang.org/)
 [![Node.js](https://img.shields.io/badge/Node.js-22%2B-green.svg)](https://nodejs.org/)
@@ -42,42 +42,54 @@ pnpm install
 Copy `.env.example` to `.env` and set your credentials:
 
 ```bash
-cp .env.example .env
+copy .env.example .env
 ```
 
-If you just want to preview the app locally and do not yet have a database configured, the project includes safe defaults so the frontend and backend can still start without needing to set `PORT`, `BASE_PATH`, or `DATABASE_URL` manually.
+Example `.env` values:
+
+```env
+PORT=5000
+NODE_ENV=development
+BASE_PATH=/
+DATABASE_URL=postgresql://postgres:postgres@localhost:5432/a11ai
+SESSION_SECRET=change-me-to-a-long-random-secret
+VITE_PORT=5173
+```
+
+If you only want to preview the app locally without a full database setup, the project includes safe defaults so the frontend and backend can still start.
 
 ### 3. Preview the Web App
 
-Open a terminal in the project root and start the API and frontend:
+Open two terminals in the project root.
 
-```bash
-# Backend (API server on port 5000)
+Backend (API server on port `5000`):
+
+```powershell
 $env:PORT = "5000"
 $env:NODE_ENV = "development"
 pnpm --filter @workspace/api-server run dev
 ```
 
-In a second terminal:
+Frontend (Vite app on port `5173`):
 
-```bash
-# Frontend (Vite app on port 5173)
+```powershell
 $env:PORT = "5173"
 $env:BASE_PATH = "/"
 pnpm --filter @workspace/a11ai run dev
 ```
 
-Then open the app in your browser:
+Then open in your browser:
 
 - http://localhost:5173
 
-The backend API will be available at:
+The backend API is available at:
 
 - http://localhost:5000
 
 ### 4. Run Unit Tests
 
 Execute the native backend security and scanner unit tests:
+
 ```bash
 node --experimental-strip-types --test artifacts/api-server/src/lib/url-validator.test.ts artifacts/api-server/src/lib/wcag-scanner.test.ts
 ```
@@ -97,7 +109,9 @@ node --experimental-strip-types --test artifacts/api-server/src/lib/url-validato
 │   ├── api-client-react/     # Generated React Query Hooks
 │   └── db/                   # Drizzle ORM Database Schemas & Client
 ├── replit.md                 # Architecture & Operations Guide
-└── package.json              # Workspace root configuration
+├── package.json              # Workspace root configuration
+├── .env.example              # Environment variables template
+└── README.md                 # Project documentation
 ```
 
 ---
