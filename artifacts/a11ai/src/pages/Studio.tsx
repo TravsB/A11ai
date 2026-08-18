@@ -45,7 +45,10 @@ export default function Studio() {
   // Allow explicit backend API base via Vite env (VITE_API_URL). When set
   // this will be used to construct the proxy URL (useful in dev where the
   // frontend dev server may not proxy /api to the backend).
-  const apiBase = (import.meta.env as any).VITE_API_URL as string | undefined;
+  const envApiBase = (import.meta.env as any).VITE_API_URL as string | undefined;
+  const apiBaseFallback = typeof window !== 'undefined' ? `${window.location.protocol}//${window.location.hostname}:5000` : undefined;
+  const apiBase = envApiBase ?? apiBaseFallback;
+
   const proxySrc = useMemo(() => {
     if (!currentUrl) return "";
     const encoded = encodeURIComponent(currentUrl);
