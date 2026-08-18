@@ -42,13 +42,16 @@ export default function Studio() {
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const currentUrl = cursor >= 0 ? history[cursor] : "";
 
-  const proxySrc = useMemo(
-    () =>
-      currentUrl
-        ? `/api/public/proxy?url=${encodeURIComponent(currentUrl)}`
-        : "",
-    [currentUrl],
-  );
+  // Allow explicit backend API base via Vite env (VITE_API_URL). When set
+  // this will be used to construct the proxy URL (useful in dev where the
+  // frontend dev server may not proxy /api to the backend).
+  const apiBase = (import.meta.env as any).VITE_API_URL as string | undefined;
+  const proxySrc = useMemo(() => {
+    if (!currentUrl) return "";
+    const encoded = encodeURIComponent(currentUrl);
+    if (apiBase) return `${apiBase.replace(/\/$/, '')}/api/public/proxy?url=${encoded}`;
+    return `/api/public/proxy?url=${encoded}`;
+  }, [currentUrl, apiBase]);
 
   useEffect(() => {
     if (!ready) return;
