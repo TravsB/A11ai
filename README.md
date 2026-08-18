@@ -27,12 +27,12 @@
 
 - [Node.js 22+](https://nodejs.org/)
 - [pnpm 9+](https://pnpm.io/)
-- PostgreSQL database instance
+- PostgreSQL database instance (optional for local preview if you only want the UI and API shell to start)
 
 ### 1. Clone & Install
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/A11ai.git
+git clone https://github.com/TravsB/A11ai.git
 cd A11ai
 pnpm install
 ```
@@ -45,17 +45,35 @@ Copy `.env.example` to `.env` and set your credentials:
 cp .env.example .env
 ```
 
-### 3. Run Development Servers
+If you just want to preview the app locally and do not yet have a database configured, the project includes safe defaults so the frontend and backend can still start without needing to set `PORT`, `BASE_PATH`, or `DATABASE_URL` manually.
 
-Start the Express API server (Port `5000`):
+### 3. Preview the Web App
+
+Open a terminal in the project root and start the API and frontend:
+
 ```bash
+# Backend (API server on port 5000)
+$env:PORT = "5000"
+$env:NODE_ENV = "development"
 pnpm --filter @workspace/api-server run dev
 ```
 
-Start the React Vite frontend application:
+In a second terminal:
+
 ```bash
+# Frontend (Vite app on port 5173)
+$env:PORT = "5173"
+$env:BASE_PATH = "/"
 pnpm --filter @workspace/a11ai run dev
 ```
+
+Then open the app in your browser:
+
+- http://localhost:5173
+
+The backend API will be available at:
+
+- http://localhost:5000
 
 ### 4. Run Unit Tests
 
