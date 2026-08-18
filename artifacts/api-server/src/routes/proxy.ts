@@ -72,7 +72,7 @@ router.get("/public/proxy", async (req, res) => {
     var root = document.documentElement;
 
     // Handle vision mode filters
-    var mode = cfg.mode || cfg.visionMode || 'normal';
+    var mode = (cfg.mode || cfg.visionMode || 'normal').toString();
     var modeFilter = '';
     if(mode && mode !== 'normal' && mode !== 'none'){
       ensureFilters();
@@ -82,13 +82,16 @@ router.get("/public/proxy", async (req, res) => {
         modeFilter = 'contrast(150%) brightness(1.05)';
       } else {
         // protanopia, deuteranopia, tritanopia -> use svg filter URL
-        modeFilter = 'url(#a11ai-filter-' + mode + ')';
+        // defensively sanitize mode to alpha characters to avoid injection
+        var safeMode = mode.replace(/[^a-z-]/gi, '');
+        modeFilter = 'url(#a11ai-filter-' + safeMode + ')';
       }
     }
 
     // Contrast
     var contrastFilter = '';
     if(cfg.contrast && Number(cfg.contrast) !== 100){
+      // use numeric multiplier (1.1 == 110%) — keep consistent with client
       contrastFilter = 'contrast(' + (Number(cfg.contrast)/100) + ')';
     }
 
@@ -103,12 +106,12 @@ router.get("/public/proxy", async (req, res) => {
       try{ root.style.fontSize = ''; }catch(e){}
     }
 
-    // Dyslexia font (inject style with !important to increase chance of taking effect)
+    // Dyslexia font — inject a more robust readable style (increase letter spacing, line-height, and weight)
     var DY_STYLE_ID = '__a11ai_dyslexia';
     if(cfg.dyslexia){
       if(!document.getElementById(DY_STYLE_ID)){
         var s = document.createElement('style'); s.id = DY_STYLE_ID;
-        s.textContent = 'html, body, * { font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif !important; }';
+        s.textContent = '\n          html, body, * { \n            font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif !important; \n            font-weight: 600 !important; \n            letter-spacing: 0.02em !important; \n            word-spacing: 0.03em !important; \n            line-height: 1.5 !important; \n            -webkit-font-smoothing: antialiased !important; \n            text-rendering: optimizeLegibility !important; \n          }\n        ';
         document.head.appendChild(s);
       }
     } else {

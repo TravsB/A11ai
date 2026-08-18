@@ -2,7 +2,7 @@ export function VisionFilters() {
   return (
     <svg aria-hidden className="pointer-events-none absolute h-0 w-0 overflow-hidden">
       <defs>
-        <filter id="vision-protanopia">
+        <filter id="a11ai-filter-protanopia">
           <feColorMatrix
             type="matrix"
             values="0.567 0.433 0     0 0
@@ -11,7 +11,7 @@ export function VisionFilters() {
                     0     0     0     1 0"
           />
         </filter>
-        <filter id="vision-deuteranopia">
+        <filter id="a11ai-filter-deuteranopia">
           <feColorMatrix
             type="matrix"
             values="0.625 0.375 0    0 0
@@ -20,7 +20,7 @@ export function VisionFilters() {
                     0     0     0    1 0"
           />
         </filter>
-        <filter id="vision-tritanopia">
+        <filter id="a11ai-filter-tritanopia">
           <feColorMatrix
             type="matrix"
             values="0.95 0.05  0     0 0
