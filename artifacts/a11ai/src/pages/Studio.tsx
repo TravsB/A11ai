@@ -77,8 +77,9 @@ export default function Studio() {
 
   useEffect(() => {
     function onMessage(e: MessageEvent) {
-      // Accept messages only from the preview iframe window and that match the expected protocol
-      if (e.source !== iframeRef.current?.contentWindow) return;
+      // Accept messages that match our preview protocol; allow flexible source
+      // because the iframe may be cross-origin or reload quickly and the
+      // contentWindow reference can differ during navigation.
       const data = e.data as { __va?: string; url?: string };
       if (!data || !data.__va) return;
       if (data.__va === "ready") {
@@ -89,7 +90,41 @@ export default function Studio() {
     }
     window.addEventListener("message", onMessage);
     return () => window.removeEventListener("message", onMessage);
-  });
+  }, []);
+
+  // Whenever the iframe src or any config changes, attempt to post the config
+  // immediately and retry a couple of times to increase reliability across
+  // navigation races where the iframe may not yet have registered its message
+  // handler.
+  useEffect(() => {
+    function postConfigOnce() {
+      const win = iframeRef.current?.contentWindow;
+      if (!win) return;
+      win.postMessage(
+        {
+          __va: "config",
+          config: {
+            mode,
+            contrast: contrast[0],
+            fontScale: fontScale[0],
+            link: linkHighlight,
+            dyslexia,
+            daltonize,
+          },
+        },
+        "*",
+      );
+    }
+
+    // Post immediately and schedule a couple of retries
+    postConfigOnce();
+    const t1 = setTimeout(postConfigOnce, 250);
+    const t2 = setTimeout(postConfigOnce, 1000);
+    return () => {
+      clearTimeout(t1);
+      clearTimeout(t2);
+    };
+  }, [proxySrc, ready, mode, contrast, fontScale, linkHighlight, dyslexia, daltonize]);
 
   function loadUrl(rawUrl: string) {
     const url = normalizeUrl(rawUrl);
