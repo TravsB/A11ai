@@ -12,11 +12,13 @@ const router: IRouter = Router();
 
 router.use(healthRouter);
 router.use(authRouter);
+// Mount the proxy router early so public preview endpoints are available
+// without being affected by downstream auth middleware.
+router.use(proxyRouter);
 router.use(publicScanRouter);
 router.use(auditsRouter);
 router.use(apiKeysRouter);
 router.use(preferencesRouter);
 router.use(scansRouter);
-router.use(proxyRouter);
 
 export default router;

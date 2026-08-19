@@ -6,6 +6,7 @@ import { validateScanUrl } from "../lib/url-validator";
 const router = Router();
 
 router.get("/public/proxy", async (req, res) => {
+  logger.info({ headers: req.headers, cookies: req.cookies }, 'Proxy request received');
   const rawUrl = req.query["url"];
   const validated = validateScanUrl(rawUrl as string);
   if (!validated.valid || !validated.url) {
@@ -37,6 +38,13 @@ router.get("/public/proxy", async (req, res) => {
 
     let html = await upstream.text();
     const base = url.toString();
+
+    // Strip upstream CSP / frame blockers so the injected accessibility script can
+    // actually run inside the preview iframe. Many sites include strict CSP or
+    // X-Frame-Options policies that prevent our inline script from executing.
+    html = html.replace(/<meta\s+[^>]*http-equiv\s*=\s*["']?content-security-policy["']?[^>]*>/gi, "");
+    html = html.replace(/<meta\s+[^>]*http-equiv\s*=\s*["']?x-frame-options["']?[^>]*>/gi, "");
+    html = html.replace(/<meta\s+[^>]*http-equiv\s*=\s*["']?permissions-policy["']?[^>]*>/gi, "");
 
     // Use cheerio to safely inject base and the preview script into <head>
     try {
@@ -142,9 +150,12 @@ router.get("/public/proxy", async (req, res) => {
       });
     }
 
+    res.removeHeader("Content-Security-Policy");
+    res.removeHeader("X-Frame-Options");
     res.setHeader("Content-Type", "text/html; charset=utf-8");
     res.setHeader("X-Frame-Options", "ALLOWALL");
-    res.setHeader("Content-Security-Policy", "");
+    res.setHeader("Cross-Origin-Embedder-Policy", "unsafe-none");
+    res.setHeader("Cross-Origin-Resource-Policy", "cross-origin");
     res.send(html);
   } catch (err) {
     logger.warn({ err, url: url.toString() }, "Proxy fetch failed");

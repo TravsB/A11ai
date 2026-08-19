@@ -60,9 +60,19 @@ If you only want to preview the app locally without a full database setup, the p
 
 ### 3. Preview the Web App
 
-Open two terminals in the project root.
+The simplest local preview command is the workspace dev runner from the repo root:
 
-Backend (API server on port `5000`):
+```powershell
+pnpm -r --if-present dev
+```
+
+This starts the API server and all Vite apps in the monorepo in development mode. Once the dev servers are running, open:
+
+- Frontend: http://localhost:5173
+- Live Studio: http://localhost:5173/studio
+- API health check: http://localhost:5000/healthz
+
+If you prefer to run each app manually, you can still do it in separate terminals:
 
 ```powershell
 $env:PORT = "5000"
@@ -70,21 +80,11 @@ $env:NODE_ENV = "development"
 pnpm --filter @workspace/api-server run dev
 ```
 
-Frontend (Vite app on port `5173`):
-
 ```powershell
 $env:PORT = "5173"
 $env:BASE_PATH = "/"
 pnpm --filter @workspace/a11ai run dev
 ```
-
-Then open in your browser:
-
-- http://localhost:5173
-
-The backend API is available at:
-
-- http://localhost:5000
 
 ### 4. Run Unit Tests
 
